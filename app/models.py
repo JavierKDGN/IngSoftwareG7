@@ -51,11 +51,12 @@ class Paciente(db.Model):
 class Medico(db.Model):
     id_medico: so.Mapped[int] = so.mapped_column(primary_key=True)
     nombre: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
+    apellido: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     especialidad: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     telefono: so.Mapped[Optional[str]] = so.mapped_column(sa.String(15))
 
     def __repr__(self):
-        return (f'<Medico(id_medico={self.id_medico}, nombre={self.nombre}, '
+        return (f'<Medico(id_medico={self.id_medico}, nombre={self.nombre}, apellido={self.apellido} '
                 f'especialidad={self.especialidad}, telefono={self.telefono})>')
 
 # Tabla Horario, cada entrada es un bloque en tal dia ocupado

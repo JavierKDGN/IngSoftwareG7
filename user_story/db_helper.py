@@ -7,9 +7,12 @@ import sqlalchemy as sa
 
 def formatear_base_datos():
     '''Reestablece la base de datos a un estado inicial y realiza la migracion para actualizarla'''
-    input("Seguro? Se borraran todos los datos, esta funcion es solo para testear")
-    downgrade(directory='migrations', revision='base', sql=False, tag=None)
-    upgrade(directory='migrations', revision='head', sql=False, tag=None)
+    seguro = input("Seguro? Se borraran todos los datos, esta funcion es solo para testear, escriba no para cancelar")
+    if seguro:
+        downgrade(directory='migrations', revision='base', sql=False, tag=None)
+        upgrade(directory='migrations', revision='head', sql=False, tag=None)
+    else:
+        print("Operacion cancelada")
 
 
 # De aca a abajo son testeos de inserciones en la base de datos hechos por ChatGPT
@@ -26,11 +29,11 @@ def popular_base_datos():
     ]
 
     medicos_data = [
-        {"nombre": "Dr. Jose", "especialidad": "Cardiología", "telefono": "111222333"},
-        {"nombre": "Dra. Laura", "especialidad": "Dermatología", "telefono": "444555666"},
-        {"nombre": "Dr. Martin", "especialidad": "Pediatría", "telefono": "777888999"},
-        {"nombre": "Dra. Sofia", "especialidad": "Neurología", "telefono": "000111222"},
-        {"nombre": "Dr. Diego", "especialidad": "Odontología", "telefono": "333444555"},
+        {"nombre": "Dr.", "apellido": "Jose", "especialidad": "Cardiología", "telefono": "111222333"},
+        {"nombre": "Dra", "apellido": "Laura","especialidad": "Dermatología", "telefono": "444555666"},
+        {"nombre": "Dr", "apellido": "Martin","especialidad": "Pediatría", "telefono": "777888999"},
+        {"nombre": "Dra", "apellido": "Sofia","especialidad": "Neurología", "telefono": "000111222"},
+        {"nombre": "Dr", "apellido": "Diego","especialidad": "Odontología", "telefono": "333444555"},
     ]
 
     # Crear pacientes
@@ -48,6 +51,7 @@ def popular_base_datos():
     for medico_data in medicos_data:
         medico = Medico(
             nombre=medico_data["nombre"],
+            apellido=medico_data["apellido"],
             especialidad=medico_data["especialidad"],
             telefono=medico_data["telefono"]
         )
@@ -113,7 +117,7 @@ def mostrar_citas_medicos():
     medicos = Medico.query.all()
 
     for medico in medicos:
-        print(f"\nMédico: {medico.nombre} - Especialidad: {medico.especialidad}")
+        print(f"\nMédico: {medico.apellido} - Especialidad: {medico.especialidad}")
         print("=" * 50)
 
         # Obtener todas las citas del médico actual
@@ -133,3 +137,12 @@ def mostrar_citas_medicos():
             print(f"  Bloque: {horario.bloque.name}")
             print(f"  Estado: {cita.estado.name}")
             print("-" * 50)
+
+
+def verificar_paciente_existente(nombre, apellido):
+    '''Verifica si un paciente con el nombre y apellido especificados ya existe en la base de datos'''
+    return Paciente.query.filter_by(nombre=nombre, apellido=apellido).first()
+
+def verificar_medico_existente(nombre, apellido):
+    '''Verifica si un médico con el nombre especificado ya existe en la base de datos'''
+    return Medico.query.filter_by(nombre=nombre, apellido=apellido).first()
