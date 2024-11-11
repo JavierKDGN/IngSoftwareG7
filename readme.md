@@ -51,3 +51,15 @@ Asegúrate de configurar las variables de entorno necesarias. Puedes usar un arc
 Para ejecutar la aplicación, usa el siguiente comando:
 ```sh
 flask run
+```
+Luego para inicializar la Base de Datos
+```sh
+flask db init
+```
+
+Por ultimo para migrar (actualizar) la BD a su ultima version
+```sh
+flask db upgrade 
+```
+Si ocurre un error al correr, entonces se debe repetir el ultimo paso hasta que este en la ultima version
+```sh
