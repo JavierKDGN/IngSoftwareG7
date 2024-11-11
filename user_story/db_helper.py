@@ -138,6 +138,58 @@ def mostrar_citas_medicos():
             print(f"  Estado: {cita.estado.name}")
             print("-" * 50)
 
+def crear_paciente_y_medico():
+    datos_paciente_dummy = {
+        "nombre": "Juan",
+        "apellido": "Perez",
+        "fecha_nacimiento": "2024-11-07",
+        "email": "juan.perez@test.com",
+        "telefono": "912345678"
+    }
+
+    datos_medico_dummy = {
+        "nombre": "Dr.",
+        "apellido": "Jose",
+        "especialidad": "Cardiología",
+        "telefono": "111222333"
+    }
+
+    # Verificar o crear paciente
+    if not verificar_paciente_existente(datos_paciente_dummy["nombre"], datos_paciente_dummy["apellido"]):
+        nuevo_paciente = Paciente(
+            nombre=datos_paciente_dummy["nombre"],
+            apellido=datos_paciente_dummy["apellido"],
+            fecha_nacimiento=date.fromisoformat(datos_paciente_dummy["fecha_nacimiento"]),
+            email=datos_paciente_dummy["email"],
+            telefono=datos_paciente_dummy["telefono"]
+        )
+        db.session.add(nuevo_paciente)
+        db.session.commit()
+    else:
+        nuevo_paciente = Paciente.query.filter_by(
+            nombre=datos_paciente_dummy["nombre"],
+            apellido=datos_paciente_dummy["apellido"]
+        ).first()
+
+    # Verificar o crear médico
+    if not verificar_medico_existente("Dr.", "Jose"):
+        nuevo_medico = Medico(
+            nombre=datos_medico_dummy["nombre"],
+            apellido=datos_medico_dummy["apellido"],
+            especialidad=datos_medico_dummy["especialidad"],
+            telefono=datos_medico_dummy["telefono"]
+        )
+        db.session.add(nuevo_medico)
+        db.session.commit()
+    else:
+        nuevo_medico = Medico.query.filter_by(
+            nombre=datos_medico_dummy["nombre"],
+            apellido=datos_medico_dummy["apellido"]
+        ).first()
+
+    return nuevo_paciente, nuevo_medico
+
+
 
 def verificar_paciente_existente(nombre, apellido):
     '''Verifica si un paciente con el nombre y apellido especificados ya existe en la base de datos'''
