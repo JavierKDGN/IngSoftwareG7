@@ -21,8 +21,8 @@ def especialistas():
     ]
     return render_template('especialistas.html', especialistas=especialistas_lista)
 
-@app.route('/contacto')
-def contacto():
-    return render_template('contacto.html')
+@app.route('/centroayuda')
+def centroayuda():
+    return render_template('centroayuda.html')
 
 
