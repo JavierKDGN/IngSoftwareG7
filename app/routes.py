@@ -1,4 +1,4 @@
-from flask import render_template
+from flask import render_template, redirect, url_for
 from app import app
 
 # Este archivo define las rutas de la aplicacion
@@ -9,11 +9,20 @@ from app import app
 # decoradores para definir las rutas
 #ej de ruta localhost:5000/ mostrara el mensaje Hello!
 @app.route('/')
-def hello_world():
-    return 'Hello!'
+def index():
+    return render_template('index.html')
 
-@app.route('/test')
-def test():
-    user = {'username': 'Paciente'}
-    return render_template('test.html', title='Test', user=user)
+@app.route('/especialistas')
+def especialistas():
+    especialistas_lista = [
+        {'id': 1, 'nombre': 'Dr. Juan Pérez', 'especialidad': 'Cardiología', 'contacto': '934434221'},
+        {'id': 2, 'nombre': 'Dra. Ana López', 'especialidad': 'Dermatología', 'contacto': '932435465'},
+        {'id': 3, 'nombre': 'Dr. Carlos Sánchez', 'especialidad': 'Pediatría', 'contacto': '982736457'}
+    ]
+    return render_template('especialistas.html', especialistas=especialistas_lista)
+
+@app.route('/contacto')
+def contacto():
+    return render_template('contacto.html')
+
 
