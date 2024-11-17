@@ -81,6 +81,15 @@ class Medico(db.Model):
         return cls.query.all()
 
     @classmethod
+    def get_medico_por_especialidad(cls, especialidad):
+        return cls.query.filter_by(especialidad=especialidad).all()
+
+    @classmethod
+    def is_disponible_en_fecha(cls, fecha, id_medico):
+        bloques_disponibles = Horario.get_bloques_disp_en_fecha_de_medico(fecha, id_medico)
+        return len(bloques_disponibles) > 0
+
+    @classmethod
     def crear_medico(cls, nombre, apellido, especialidad, telefono):
         nuevo_medico = cls(nombre=nombre, apellido=apellido, especialidad=especialidad, telefono=telefono)
         db.session.add(nuevo_medico)

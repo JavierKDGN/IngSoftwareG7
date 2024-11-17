@@ -24,10 +24,10 @@ def cancelar_cita_medica(id_cita):
     cita_cancelada = Cita.cancelar_cita(id_cita)
     if cita_cancelada:
         print(f"Cita {id_cita} cancelada correctamente")
-        return True
+        return cita_cancelada
     else:
         print(f"Error al cancelar la cita")
-        return False
+        return None
 
 def obtener_historial_citas_paciente(id_paciente):
     return Cita.get_citas_por_paciente(id_paciente)

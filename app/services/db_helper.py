@@ -148,31 +148,8 @@ def crear_paciente_y_medico():
 def ocupar_todos_los_bloques(id_medico, fecha):
     """Ocupa todos los bloques de un médico en una fecha específica."""
     for bloque in BloqueHorario:
-        Horario.crear_bloque_ocupado(fecha, bloque, id_medico)
-
-def mostrar_citas_medicos():
-    """Imprime las citas de cada médico, incluyendo el paciente, fecha, bloque y estado."""
-
-    medicos = Medico.get_all_medicos()
-
-    for medico in medicos:
-        print(f"\nMédico: {medico.apellido} - Especialidad: {medico.especialidad}")
-        print("=" * 50)
-
-        # Obtener todas las citas del médico actual
-        citas = medico.get_citas()
-
-        if not citas:
-            print("No hay citas para este médico.")
-            continue
-
-        # Mostrar los detalles de cada cita
-        for cita in citas:
-            paciente = cita.paciente
-            horario = cita.horario
-            print(f"Cita ID: {cita.id_cita}")
-            print(f"  Paciente: {paciente.nombre} {paciente.apellido}")
-
+        horario = Horario.crear_bloque_ocupado(fecha, bloque, id_medico)
+        Cita.crear_cita(id_paciente=1, id_medico=id_medico, id_horario=horario.id_horario)
 
 def verificar_paciente_existente(nombre, apellido):
     '''Verifica si un paciente con el nombre y apellido especificados ya existe en la base de datos'''
