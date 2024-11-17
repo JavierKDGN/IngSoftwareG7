@@ -4,6 +4,7 @@ from enum import Enum
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from app import db
+from app.utils import parse_fecha
 
 class EstadoCita(Enum):
     AGENDADA = 1
@@ -31,7 +32,6 @@ class BloqueHorario(Enum):
     BLOQUE_16 = 16  # 16:30 - 17:00
     BLOQUE_17 = 17  # 17:00 - 17:30
     BLOQUE_18 = 18  # 17:30 - 18:00
-
 
 # Tabla Paciente
 class Paciente(db.Model):
@@ -122,22 +122,19 @@ class Horario(db.Model):
     @classmethod
     def get_bloque_ocupado(cls, fecha, bloque, id_medico):
         '''Retorna el bloque ocupado en una fecha por medico específico'''
-        fecha = date.fromisoformat(fecha)
+        fecha = parse_fecha(fecha)
         return cls.query.filter_by(fecha=fecha, bloque=bloque, id_medico=id_medico).first()
 
     @classmethod
     def get_bloques_ocup_en_fecha_de_medico(cls, fecha, id_medico):
         '''Retorna los bloques ocupados en una fecha por medico específico'''
-        fecha = date.fromisoformat(fecha)
-        bloques = cls.query.filter_by(fecha=fecha, id_medico=id_medico).all()
-        bloques_ocupados = []
-        for bloque in bloques:
-            citas_existentes = Cita.get_citas_por_horario(bloque.id_horario)
-            for cita in citas_existentes:
-                if cita.estado != EstadoCita.CANCELADA:
-                    bloques_ocupados.append(bloque)
-                    break
-        return bloques_ocupados
+        fecha = parse_fecha(fecha)
+        bloques = cls.query.join(Cita).filter(
+            cls.fecha == fecha,
+            cls.id_medico == id_medico,
+            Cita.estado.in_([EstadoCita.AGENDADA, EstadoCita.CONFIRMADA, EstadoCita.REALIZADA])
+        ).all()
+        return bloques
 
 
     @classmethod
@@ -150,13 +147,13 @@ class Horario(db.Model):
     @classmethod
     def is_bloque_disponible(cls, fecha, bloque, id_medico):
         '''Retorna True si el bloque está disponible en la fecha para el medico'''
-        fecha = date.fromisoformat(fecha)
+        fecha = parse_fecha(fecha)
         bloque_ocupado = cls.query.filter_by(fecha=fecha, bloque=bloque, id_medico=id_medico).first()
         return bloque_ocupado is None # True si esta disponible, False si ocupado
 
     @classmethod
     def crear_bloque_ocupado(cls, fecha, bloque, id_medico):
-        fecha = date.fromisoformat(fecha)
+        fecha = parse_fecha(fecha)
         nuevo_bloque = cls(fecha=fecha, bloque=bloque, id_medico=id_medico)
         db.session.add(nuevo_bloque)
         db.session.commit()
