@@ -191,6 +191,24 @@ def crear_paciente_y_medico():
 
 
 
+def ocupar_todos_los_bloques(id_medico, fecha):
+    medico = Medico.query.get(id_medico)
+    if not medico:
+        print(f"Medico con id {id_medico} no encontrado.")
+        return
+
+    # Obtener todos los bloques
+    bloques = list(BloqueHorario)
+
+    # Crear horarios ocupados para cada bloque en la fecha especificada
+    for bloque in bloques:
+        horario = Horario(fecha=fecha, bloque=bloque, id_medico=id_medico)
+        db.session.add(horario)
+
+    db.session.commit()
+    print(f"Todos los bloques para el medico {medico} en la fecha {fecha} han sido ocupados.")
+
+
 def verificar_paciente_existente(nombre, apellido):
     '''Verifica si un paciente con el nombre y apellido especificados ya existe en la base de datos'''
     return Paciente.query.filter_by(nombre=nombre, apellido=apellido).first()
