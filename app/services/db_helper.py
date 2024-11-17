@@ -5,6 +5,7 @@ from app.models import BloqueHorario, EstadoCita
 from app.models import Paciente, Medico, Horario, Cita
 import sqlalchemy as sa
 
+
 def formatear_base_datos():
     '''Reestablece la base de datos a un estado inicial y realiza la migracion para actualizarla'''
     seguro = input("Seguro? Se borraran todos los datos, esta funcion es solo para testear, escriba no para cancelar")
@@ -13,10 +14,6 @@ def formatear_base_datos():
         upgrade(directory='migrations', revision='head', sql=False, tag=None)
     else:
         print("Operacion cancelada")
-
-
-# De aca a abajo son testeos de inserciones en la base de datos hechos por ChatGPT
-# para comprobar que las relaciones entre tablas funcionan correctamente
 
 def popular_base_datos():
     """Crea datos de prueba para la base de datos: 5 pacientes y 5 médicos."""
@@ -60,20 +57,6 @@ def popular_base_datos():
     # Confirmar inserción en la base de datos
     db.session.commit()
 
-def imprimir_pacientes():
-    '''Imprime todos los pacientes en la base de datos'''
-    pacientes = Paciente.query.all()
-    print("Pacientes:")
-    for paciente in pacientes:
-        print(paciente)
-
-def imprimir_medicos():
-    '''Imprime todos los médicos en la base de datos'''
-    medicos = Medico.query.all()
-    print("Médicos:")
-    for medico in medicos:
-        print(medico)
-
 def asignar_citas_medicos():
     """Asigna 2 horarios a cada médico con diferentes pacientes en distintos bloques y fechas."""
 
@@ -111,33 +94,6 @@ def asignar_citas_medicos():
     # Confirmar inserción en la base de datos
     db.session.commit()
 
-def mostrar_citas_medicos():
-    """Imprime las citas de cada médico, incluyendo el paciente, fecha, bloque y estado."""
-
-    medicos = Medico.query.all()
-
-    for medico in medicos:
-        print(f"\nMédico: {medico.apellido} - Especialidad: {medico.especialidad}")
-        print("=" * 50)
-
-        # Obtener todas las citas del médico actual
-        citas = Cita.query.filter_by(id_medico=medico.id_medico).all()
-
-        if not citas:
-            print("No hay citas para este médico.")
-            continue
-
-        # Mostrar los detalles de cada cita
-        for cita in citas:
-            paciente = cita.paciente
-            horario = cita.horario
-            print(f"Cita ID: {cita.id_cita}")
-            print(f"  Paciente: {paciente.nombre} {paciente.apellido}")
-            print(f"  Fecha: {horario.fecha}")
-            print(f"  Bloque: {horario.bloque.name}")
-            print(f"  Estado: {cita.estado.name}")
-            print("-" * 50)
-
 def crear_paciente_y_medico():
     datos_paciente_dummy = {
         "nombre": "Juan",
@@ -173,7 +129,7 @@ def crear_paciente_y_medico():
 
     # Verificar o crear médico
     if not verificar_medico_existente("Dr.", "Jose"):
-        nuevo_medico = Medico(
+        nuevo_medico = Medico.crear_medico(
             nombre=datos_medico_dummy["nombre"],
             apellido=datos_medico_dummy["apellido"],
             especialidad=datos_medico_dummy["especialidad"],
@@ -190,21 +146,32 @@ def crear_paciente_y_medico():
     return nuevo_paciente, nuevo_medico
 
 def ocupar_todos_los_bloques(id_medico, fecha):
-    medico = Medico.query.get(id_medico)
-    if not medico:
-        print(f"Medico con id {id_medico} no encontrado.")
-        return
+    """Ocupa todos los bloques de un médico en una fecha específica."""
+    for bloque in BloqueHorario:
+        Horario.crear_bloque_ocupado(fecha, bloque, id_medico)
 
-    # Obtener todos los bloques
-    bloques = list(BloqueHorario)
+def mostrar_citas_medicos():
+    """Imprime las citas de cada médico, incluyendo el paciente, fecha, bloque y estado."""
 
-    # Crear horarios ocupados para cada bloque en la fecha especificada
-    for bloque in bloques:
-        horario = Horario(fecha=fecha, bloque=bloque, id_medico=id_medico)
-        db.session.add(horario)
+    medicos = Medico.get_all_medicos()
 
-    db.session.commit()
-    print(f"Todos los bloques para el medico {medico} en la fecha {fecha} han sido ocupados.")
+    for medico in medicos:
+        print(f"\nMédico: {medico.apellido} - Especialidad: {medico.especialidad}")
+        print("=" * 50)
+
+        # Obtener todas las citas del médico actual
+        citas = medico.get_citas()
+
+        if not citas:
+            print("No hay citas para este médico.")
+            continue
+
+        # Mostrar los detalles de cada cita
+        for cita in citas:
+            paciente = cita.paciente
+            horario = cita.horario
+            print(f"Cita ID: {cita.id_cita}")
+            print(f"  Paciente: {paciente.nombre} {paciente.apellido}")
 
 
 def verificar_paciente_existente(nombre, apellido):

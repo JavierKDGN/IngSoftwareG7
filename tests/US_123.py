@@ -22,8 +22,10 @@ def test_cancelar_cita():
     resultado2 = reservar_cita_medica(paciente.id_paciente, medico.id_medico, fecha, bloque2)
 
     #cancelamos cita 2
-    citas_paciente = Cita.query.filter_by(id_paciente=paciente.id_paciente).all()
-    cita_a_cancelar = citas_paciente[1] #queremos cancelar al 2da cita
+    citas_paciente = Cita.get_citas_por_paciente(paciente.id_paciente)
+    cita_a_cancelar = resultado2 #queremos cancelar al 2da cita
+    print(f"Citas del paciente {paciente}: {citas_paciente}")
+    print(f"Cita a cancelar: {cita_a_cancelar}")
     resultado_cancelar = cancelar_cita_medica(cita_a_cancelar.id_cita)
     if resultado_cancelar:
         return f"Cita {cita_a_cancelar} cancelada correctamente"

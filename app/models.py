@@ -43,6 +43,21 @@ class Paciente(db.Model):
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
     telefono: so.Mapped[Optional[str]] = so.mapped_column(sa.String(15))
 
+    @classmethod
+    def get_paciente(cls, id_paciente):
+        return cls.query.get(id_paciente)
+
+    @classmethod
+    def get_all_pacientes(cls):
+        return cls.query.all()
+
+    @classmethod
+    def crear_paciente(cls, nombre, apellido, fecha_nacimiento, email, telefono):
+        nuevo_paciente = cls(nombre=nombre, apellido=apellido, fecha_nacimiento=fecha_nacimiento, email=email, telefono=telefono)
+        db.session.add(nuevo_paciente)
+        db.session.commit()
+        return nuevo_paciente
+
     def __repr__(self):
         return (f'<Paciente(id_paciente={self.id_paciente}, nombre={self.nombre}, '
                 f'apellido={self.apellido}, fecha_nacimiento={self.fecha_nacimiento}, '
@@ -56,6 +71,21 @@ class Medico(db.Model):
     apellido: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     especialidad: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     telefono: so.Mapped[Optional[str]] = so.mapped_column(sa.String(15))
+
+    @classmethod
+    def get_medico(cls, id_medico):
+        return cls.query.get(id_medico)
+
+    @classmethod
+    def get_all_medicos(cls):
+        return cls.query.all()
+
+    @classmethod
+    def crear_medico(cls, nombre, apellido, especialidad, telefono):
+        nuevo_medico = cls(nombre=nombre, apellido=apellido, especialidad=especialidad, telefono=telefono)
+        db.session.add(nuevo_medico)
+        db.session.commit()
+        return nuevo_medico
 
     def __repr__(self):
         return (f'<Medico(id_medico={self.id_medico}, nombre={self.nombre}, apellido={self.apellido} '
@@ -73,10 +103,33 @@ class Horario(db.Model):
     medico: so.Mapped['Medico'] = so.relationship('Medico', backref='horarios_ocupados')
 
     @classmethod
+    def get_bloque(cls, id_horario):
+        return cls.query.get(id_horario)
+
+    @classmethod
+    def get_all_bloques(cls):
+        return cls.query.all()
+
+    @classmethod
+    def get_bloque_ocupado(cls, fecha, bloque, id_medico):
+        '''Retorna el bloque ocupado en una fecha por medico específico'''
+        fecha = date.fromisoformat(fecha)
+        return cls.query.filter_by(fecha=fecha, bloque=bloque, id_medico=id_medico).first()
+
+    @classmethod
     def get_bloques_ocup_en_fecha_de_medico(cls, fecha, id_medico):
         '''Retorna los bloques ocupados en una fecha por medico específico'''
         fecha = date.fromisoformat(fecha)
-        return cls.query.filter_by(fecha=fecha, id_medico=id_medico).all()
+        bloques = cls.query.filter_by(fecha=fecha, id_medico=id_medico).all()
+        bloques_ocupados = []
+        for bloque in bloques:
+            citas_existentes = Cita.get_citas_por_horario(bloque.id_horario)
+            for cita in citas_existentes:
+                if cita.estado != EstadoCita.CANCELADA:
+                    bloques_ocupados.append(bloque)
+                    break
+        return bloques_ocupados
+
 
     @classmethod
     def get_bloques_disp_en_fecha_de_medico(cls, fecha, id_medico):
@@ -84,6 +137,13 @@ class Horario(db.Model):
         bloques_ocupados = [bloque.bloque for bloque in bloques_ocupados]
         bloques_disponibles = [bloque for bloque in BloqueHorario if bloque not in bloques_ocupados]
         return bloques_disponibles
+
+    @classmethod
+    def is_bloque_disponible(cls, fecha, bloque, id_medico):
+        '''Retorna True si el bloque está disponible en la fecha para el medico'''
+        fecha = date.fromisoformat(fecha)
+        bloque_ocupado = cls.query.filter_by(fecha=fecha, bloque=bloque, id_medico=id_medico).first()
+        return bloque_ocupado is None # True si esta disponible, False si ocupado
 
     @classmethod
     def crear_bloque_ocupado(cls, fecha, bloque, id_medico):
@@ -111,6 +171,10 @@ class Cita(db.Model):
     horario: so.Mapped['Horario'] = so.relationship('Horario', backref='citas')
 
     @classmethod
+    def get_cita(cls, id_cita):
+        return cls.query.get(id_cita)
+
+    @classmethod
     def get_citas_por_horario(cls, id_horario):
         '''Retorna las cita asociada a un horario'''
         return cls.query.filter_by(id_horario=id_horario).all()
@@ -119,6 +183,11 @@ class Cita(db.Model):
     def get_citas_por_paciente(cls, id_paciente):
         '''Retorna las citas de un paciente'''
         return cls.query.filter_by(id_paciente=id_paciente).all()
+
+    @classmethod
+    def get_citas_por_medico(cls, id_medico):
+        '''Retorna las citas de un medico'''
+        return cls.query.filter_by(id_medico=id_medico).all()
 
     @classmethod
     def crear_cita(cls, id_paciente, id_medico, id_horario):
@@ -131,12 +200,11 @@ class Cita(db.Model):
     def cancelar_cita(cls, id_cita):
         '''Cambia el estado de una cita a cancelada'''
         cita = cls.query.get(id_cita)
-        if cita:
+        if cita and cita.estado != EstadoCita.CANCELADA:
             cita.estado = EstadoCita.CANCELADA
             db.session.commit()
-            return True
-        else:
-            return False
+            return cita
+        return None
 
 
     def __repr__(self):
