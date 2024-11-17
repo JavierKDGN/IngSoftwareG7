@@ -1,6 +1,19 @@
 from datetime import date
 from app.models import Horario, Cita, BloqueHorario, EstadoCita
 
+'''Funcionamiento del sistema de reservas
+El sistema de reservas se encarga de manejar las citas medicas entre los pacientes y los medicos.
+
+Notas refactoring:
+Cuando se reserva una hora, se crea un bloque ocupado en la tabla Horario, y se crea una cita en la tabla Cita.
+Si se cancela una cita, se cambia el estado de la cita a CANCELADA sin embargo el bloque sigue existiendo en la tabla Horario.
+Esto ultimo es debido a que si se borrase el bloque se generaria un error en la Base de Datos al intentar acceder a un bloque que ya no existe,
+cuando se quiere revisar citas canceladas. Para evitar este tipo de problemas ahora se realiza todos los accesos a la base de datos a traves de las funciones
+dentro de las clases de models.py y no directamente desde la logica de las funciones. en caso de necesitar un acceso que no esta
+en las funciones de models.py se debe crear una nueva funcion en la clase correspondiente. (como un getter o setter)
+
+'''
+
 def reservar_cita_medica(id_paciente,id_medico,fecha,bloque):
 
     horario_ocupado = Horario.get_bloque_ocupado(fecha, bloque, id_medico)
