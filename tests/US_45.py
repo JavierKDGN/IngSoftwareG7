@@ -1,7 +1,7 @@
 from app import app
 from app.routes import especialistas
 from app.services import db_helper
-from app.models import Cita, Medico
+from app.models import Cita, Medico, Especialidad
 
 def test_historial_citas(id_paciente):
     historial= Cita.get_citas_por_paciente(id_paciente)
@@ -16,7 +16,7 @@ def test_historial_citas(id_paciente):
 if __name__ == '__main__':
     with app.app_context():
         print(Medico.get_all_medicos())
-        medicos = Medico.get_medico_por_especialidad("Cardiología")
+        medicos = Medico.get_medico_por_especialidad(Especialidad.CARDIOLOGIA)
         for medico in medicos:
             db_helper.ocupar_todos_los_bloques(medico.id_medico, '2024-11-07')
             if not Medico.is_disponible_en_fecha("2024-11-07", medico.id_medico):

@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from flask_migrate import upgrade, downgrade
 from app import app, db
-from app.models import BloqueHorario, EstadoCita
+from app.models import BloqueHorario, EstadoCita, Especialidad
 from app.models import Paciente, Medico, Horario, Cita
 import sqlalchemy as sa
 
@@ -106,7 +106,7 @@ def crear_paciente_y_medico():
     datos_medico_dummy = {
         "nombre": "Dr.",
         "apellido": "Jose",
-        "especialidad": "Cardiología",
+        "especialidad": Especialidad.CARDIOLOGIA,
         "telefono": "111222333"
     }
 

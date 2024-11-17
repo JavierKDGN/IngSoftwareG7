@@ -3,6 +3,8 @@ from datetime import date
 from enum import Enum
 import sqlalchemy as sa
 import sqlalchemy.orm as so
+from flask_sqlalchemy import SQLAlchemy
+
 from app import db
 from app.utils import parse_fecha
 
@@ -32,6 +34,16 @@ class BloqueHorario(Enum):
     BLOQUE_16 = 16  # 16:30 - 17:00
     BLOQUE_17 = 17  # 17:00 - 17:30
     BLOQUE_18 = 18  # 17:30 - 18:00
+
+class Especialidad(Enum):
+    CARDIOLOGIA = "Cardiología"
+    PEDIATRIA = "Pediatría"
+    DERMATOLOGIA = "Dermatología"
+    GINECOLOGIA = "Ginecología"
+    NEUROLOGIA = "Neurología"
+    OTORRINOLARINGOLOGIA = "Otorrinolaringología"
+    PSIQUIATRIA = "Psiquiatría"
+    TRAUMATOLOGIA = "Traumatología"
 
 # Tabla Paciente
 class Paciente(db.Model):
@@ -69,7 +81,7 @@ class Medico(db.Model):
 
     nombre: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     apellido: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
-    especialidad: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
+    especialidad: so.Mapped[Especialidad] = so.mapped_column(sa.Enum(Especialidad), nullable=False)
     telefono: so.Mapped[Optional[str]] = so.mapped_column(sa.String(15))
 
     @classmethod
@@ -82,6 +94,15 @@ class Medico(db.Model):
 
     @classmethod
     def get_medico_por_especialidad(cls, especialidad):
+        if isinstance(especialidad, str):
+            try:
+                especialidad = Especialidad[especialidad.upper()]
+            except KeyError:
+                raise ValueError(f"La especialidad '{especialidad}' no es válida. Opciones: {[e.name for e in Especialidad]}")
+
+        if not isinstance(especialidad, Especialidad):
+            raise ValueError(f"El argumento 'especialidad' debe ser un string o una instancia de 'Especialidad'")
+
         return cls.query.filter_by(especialidad=especialidad).all()
 
     @classmethod
@@ -98,7 +119,7 @@ class Medico(db.Model):
 
     def __repr__(self):
         return (f'<Medico(id_medico={self.id_medico}, nombre={self.nombre}, apellido={self.apellido} '
-                f'especialidad={self.especialidad}, telefono={self.telefono})>')
+                f'especialidad={self.especialidad.name}, telefono={self.telefono})>')
 
 # Tabla Horario, cada entrada es un bloque en tal dia ocupado
 # ej dia: 1 (lunes), bloque: 1 (9:00-9:30)

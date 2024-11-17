@@ -42,8 +42,8 @@ def cancelar_cita_medica(id_cita):
         print(f"Error al cancelar la cita")
         return None
 
-def obtener_historial_citas_paciente(id_paciente):
-    return Cita.get_citas_por_paciente(id_paciente)
-
-
+# def obtener_historial_citas_paciente(id_paciente):
+#     return Cita.get_citas_por_paciente(id_paciente)
+#
+# Implementada en Cita.get_citas_por_paciente
 
