@@ -89,3 +89,4 @@ def test_ver_disponibilidad():
     horario_medico = HorarioMedico()
     bloques_disponibles = horario_medico.mostrar_horario_medico_en_fecha(fecha, medico.id_medico)
     return f"Bloques disponibles para el medico {medico} en la fecha {fecha}: {bloques_disponibles}"
+

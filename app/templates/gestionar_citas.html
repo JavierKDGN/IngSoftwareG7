@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestionar Citas</title>
+</head>
+<body>
+    <div class="citas-container">
+        <h2>Gestión de Citas</h2>
+        <div class="filters">
+            <input type="date" id="fecha" onchange="cargarCitas()">
+            <select id="filtroEstado" onchange="cargarCitas()">
+                <option value="">Todos los estados</option>
+                <option value="AGENDADA">Agendada</option>
+                <option value="CONFIRMADA">Confirmada</option>
+                <option value="REALIZADA">Realizada</option>
+                <option value="CANCELADA">Cancelada</option>
+                <option value="NO_ASISTIO">No Asistió</option>
+            </select>
+        </div>
+        <div id="listaCitas"></div>
+    </div>
+
+    <script>
+        async function cargarCitas() {
+            const fecha = document.getElementById('fecha').value;
+            const estado = document.getElementById('filtroEstado').value;
+            const idMedico = /* Add logic to get current doctor's ID */;
+
+            const queryParams = new URLSearchParams({
+                fecha: fecha,
+                estado: estado
+            });
+
+            const response = await fetch(`/api/medico/${idMedico}/citas?${queryParams}`);
+            const citas = await response.json();
+
+            const listaCitas = document.getElementById('listaCitas');
+            listaCitas.innerHTML = '';
+
+            if (citas.length === 0) {
+                listaCitas.innerHTML = '<p>No hay citas para mostrar.</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <tr>
+                    <th>Paciente</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            `;
+
+            citas.forEach(cita => {
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td>${cita.paciente}</td>
+                    <td>${cita.fecha}</td>
+                    <td>${cita.bloque}</td>
+                    <td>${cita.estado}</td>
+                    <td>
+                        <select onchange="actualizarEstado(${cita.id}, this.value)">
+                            <option value="CONFIRMADA" ${cita.estado === 'CONFIRMADA' ? 'selected' : ''}>Confirmar</option>
+                            <option value="REALIZADA" ${cita.estado === 'REALIZADA' ? 'selected' : ''}>Realizada</option>
+                            <option value="CANCELADA" ${cita.estado === 'CANCELADA' ? 'selected' : ''}>Cancelar</option>
+                            <option value="NO_ASISTIO" ${cita.estado === 'NO_ASISTIO' ? 'selected' : ''}>No Asistió</option>
+                        </select>
+                    </td>
+                `;
+            });
+
+            listaCitas.appendChild(table);
+        }
+
+        async function actualizarEstado(idCita, nuevoEstado) {
+            const response = await fetch(`/api/citas/${idCita}/estado`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ estado: nuevoEstado })
+            });
+
+            if (response.ok) {
+                cargarCitas(); // Refresh the list
+            } else {
+                alert('Error al actualizar el estado de la cita');
+            }
+        }
+
+        // Load initial data
+        window.onload = cargarCitas;
+    </script>
+</body>
+</html>

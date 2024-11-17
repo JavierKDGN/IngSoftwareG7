@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Buscar Médicos</title>
+</head>
+<body>
+    <div class="search-container">
+        <h2>Buscar Médicos</h2>
+        <div class="search-filters">
+            <input type="text" id="nombre" placeholder="Nombre del médico">
+            <input type="text" id="apellido" placeholder="Apellido del médico">
+            <select id="especialidad">
+                <option value="">Todas las especialidades</option>
+            </select>
+            <button onclick="buscarMedicos()">Buscar</button>
+        </div>
+        <div id="resultados"></div>
+    </div>
+
+    <script>
+        // Load specialties when page loads
+        window.onload = async function() {
+            const response = await fetch('/api/especialidades');
+            const especialidades = await response.json();
+            const select = document.getElementById('especialidad');
+
+            especialidades.forEach(esp => {
+                const option = document.createElement('option');
+                option.value = esp;
+                option.textContent = esp;
+                select.appendChild(option);
+            });
+        };
+
+        async function buscarMedicos() {
+            const nombre = document.getElementById('nombre').value;
+            const apellido = document.getElementById('apellido').value;
+            const especialidad = document.getElementById('especialidad').value;
+
+            const queryParams = new URLSearchParams({
+                nombre: nombre,
+                apellido: apellido,
+                especialidad: especialidad
+            });
+
+            const response = await fetch(`/api/medicos/buscar?${queryParams}`);
+            const medicos = await response.json();
+
+            const resultados = document.getElementById('resultados');
+            resultados.innerHTML = '';
+
+            if (medicos.length === 0) {
+                resultados.innerHTML = '<p>No se encontraron médicos con los criterios especificados.</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.innerHTML = `
+                <tr>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Especialidad</th>
+                    <th>Acciones</th>
+                </tr>
+            `;
+
+            medicos.forEach(medico => {
+                const row = table.insertRow();
+                row.innerHTML = `
+                    <td>${medico.nombre}</td>
+                    <td>${medico.apellido}</td>
+                    <td>${medico.especialidad}</td>
+                    <td>
+                        <button onclick="agendarCita(${medico.id})">Agendar Cita</button>
+                    </td>
+                `;
+            });
+
+            resultados.appendChild(table);
+        }
+    </script>
+</body>
+</html>
