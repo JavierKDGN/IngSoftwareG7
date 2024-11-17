@@ -36,6 +36,7 @@ class BloqueHorario(Enum):
 # Tabla Paciente
 class Paciente(db.Model):
     id_paciente: so.Mapped[int] = so.mapped_column(primary_key=True)
+
     nombre: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     apellido: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     fecha_nacimiento: so.Mapped[Optional[date]] = so.mapped_column(nullable=True)
@@ -50,6 +51,7 @@ class Paciente(db.Model):
 # Tabla Medico
 class Medico(db.Model):
     id_medico: so.Mapped[int] = so.mapped_column(primary_key=True)
+
     nombre: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     apellido: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     especialidad: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
@@ -63,11 +65,33 @@ class Medico(db.Model):
 # ej dia: 1 (lunes), bloque: 1 (9:00-9:30)
 class Horario(db.Model):
     id_horario: so.Mapped[int] = so.mapped_column(primary_key=True)
+
     fecha: so.Mapped[date] = so.mapped_column(sa.Date, nullable=False)  # Ej: 2024-11-04
     bloque:so.Mapped[BloqueHorario] = so.mapped_column(sa.Enum(BloqueHorario), nullable=False)  # Ej: bloque 1 representa"9:00-9:30"
 
     id_medico: so.Mapped[int] = so.mapped_column(sa.ForeignKey('medico.id_medico'), nullable=False)
     medico: so.Mapped['Medico'] = so.relationship('Medico', backref='horarios_ocupados')
+
+    @classmethod
+    def get_bloques_ocup_en_fecha_de_medico(cls, fecha, id_medico):
+        '''Retorna los bloques ocupados en una fecha por medico específico'''
+        fecha = date.fromisoformat(fecha)
+        return cls.query.filter_by(fecha=fecha, id_medico=id_medico).all()
+
+    @classmethod
+    def get_bloques_disp_en_fecha_de_medico(cls, fecha, id_medico):
+        bloques_ocupados = cls.get_bloques_ocup_en_fecha_de_medico(fecha, id_medico)
+        bloques_ocupados = [bloque.bloque for bloque in bloques_ocupados]
+        bloques_disponibles = [bloque for bloque in BloqueHorario if bloque not in bloques_ocupados]
+        return bloques_disponibles
+
+    @classmethod
+    def crear_bloque_ocupado(cls, fecha, bloque, id_medico):
+        fecha = date.fromisoformat(fecha)
+        nuevo_bloque = cls(fecha=fecha, bloque=bloque, id_medico=id_medico)
+        db.session.add(nuevo_bloque)
+        db.session.commit()
+        return nuevo_bloque
 
     def __repr__(self):
         return (f'<Horario(id_horario={self.id_horario}, id_medico={self.id_medico}, '
@@ -79,11 +103,41 @@ class Cita(db.Model):
     id_paciente: so.Mapped[int] = so.mapped_column(sa.ForeignKey('paciente.id_paciente'), nullable=False)
     id_medico: so.Mapped[int] = so.mapped_column(sa.ForeignKey('medico.id_medico'), nullable=False)
     id_horario: so.Mapped[int] = so.mapped_column(sa.ForeignKey('horario.id_horario'), nullable=False)
+
     estado: so.Mapped[EstadoCita] = so.mapped_column(sa.Enum(EstadoCita), default=EstadoCita.AGENDADA)  # Estados como "agendada", "cancelada", etc.
 
     paciente: so.Mapped['Paciente'] = so.relationship('Paciente', backref='citas')
     medico: so.Mapped['Medico'] = so.relationship('Medico', backref='citas')
     horario: so.Mapped['Horario'] = so.relationship('Horario', backref='citas')
+
+    @classmethod
+    def get_citas_por_horario(cls, id_horario):
+        '''Retorna las cita asociada a un horario'''
+        return cls.query.filter_by(id_horario=id_horario).all()
+
+    @classmethod
+    def get_citas_por_paciente(cls, id_paciente):
+        '''Retorna las citas de un paciente'''
+        return cls.query.filter_by(id_paciente=id_paciente).all()
+
+    @classmethod
+    def crear_cita(cls, id_paciente, id_medico, id_horario):
+        nueva_cita = cls(id_paciente=id_paciente, id_medico=id_medico, id_horario=id_horario)
+        db.session.add(nueva_cita)
+        db.session.commit()
+        return nueva_cita
+
+    @classmethod
+    def cancelar_cita(cls, id_cita):
+        '''Cambia el estado de una cita a cancelada'''
+        cita = cls.query.get(id_cita)
+        if cita:
+            cita.estado = EstadoCita.CANCELADA
+            db.session.commit()
+            return True
+        else:
+            return False
+
 
     def __repr__(self):
         return (f'<Cita(id_cita={self.id_cita}, id_paciente={self.id_paciente}, '
