@@ -1,5 +1,5 @@
 from typing import Optional
-from datetime import date
+from datetime import date, timedelta
 from enum import Enum
 import sqlalchemy as sa
 import sqlalchemy.orm as so
@@ -65,6 +65,7 @@ class Paciente(db.Model):
 
     @classmethod
     def crear_paciente(cls, nombre, apellido, fecha_nacimiento, email, telefono):
+        fecha_nacimiento = parse_fecha(fecha_nacimiento)
         nuevo_paciente = cls(nombre=nombre, apellido=apellido, fecha_nacimiento=fecha_nacimiento, email=email, telefono=telefono)
         db.session.add(nuevo_paciente)
         db.session.commit()
@@ -109,6 +110,16 @@ class Medico(db.Model):
     def is_disponible_en_fecha(cls, fecha, id_medico):
         bloques_disponibles = Horario.get_bloques_disp_en_fecha_de_medico(fecha, id_medico)
         return len(bloques_disponibles) > 0
+
+    @classmethod
+    def get_fechas_disponibles_hasta_dias(cls, id_medico, dias):
+        '''Retorna las fechas disponibles para agendar una cita con el medico en los proximos dias'''
+        fechas_disponibles = []
+        for i in range(dias):
+            fecha = date.today() + timedelta(days=i)
+            if cls.is_disponible_en_fecha(fecha, id_medico):
+                fechas_disponibles.append(fecha)
+        return fechas_disponibles
 
     @classmethod
     def crear_medico(cls, nombre, apellido, especialidad, telefono):

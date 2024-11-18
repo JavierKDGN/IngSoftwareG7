@@ -1,8 +1,8 @@
 from datetime import date, timedelta
 from flask_migrate import upgrade, downgrade
 from app import app, db
-from app.models import BloqueHorario, EstadoCita, Especialidad
-from app.models import Paciente, Medico, Horario, Cita
+from app.models import BloqueHorario, EstadoCita, Especialidad, Paciente, Medico, Horario, Cita
+from app.services.servicio_citas import reservar_cita_medica
 import sqlalchemy as sa
 
 
@@ -26,36 +26,59 @@ def popular_base_datos():
     ]
 
     medicos_data = [
-        {"nombre": "Dr.", "apellido": "Jose", "especialidad": "Cardiología", "telefono": "111222333"},
-        {"nombre": "Dra", "apellido": "Laura","especialidad": "Dermatología", "telefono": "444555666"},
-        {"nombre": "Dr", "apellido": "Martin","especialidad": "Pediatría", "telefono": "777888999"},
-        {"nombre": "Dra", "apellido": "Sofia","especialidad": "Neurología", "telefono": "000111222"},
-        {"nombre": "Dr", "apellido": "Diego","especialidad": "Odontología", "telefono": "333444555"},
+        {"nombre": "Dr.", "apellido": "Jose", "especialidad": Especialidad.CARDIOLOGIA, "telefono": "111222333"},
+        {"nombre": "Dra", "apellido": "Laura","especialidad": Especialidad.DERMATOLOGIA, "telefono": "444555666"},
+        {"nombre": "Dr", "apellido": "Martin","especialidad": Especialidad.PEDIATRIA, "telefono": "777888999"},
+        {"nombre": "Dra", "apellido": "Sofia","especialidad": Especialidad.NEUROLOGIA, "telefono": "000111222"},
+        {"nombre": "Dr", "apellido": "Diego","especialidad": Especialidad.OTORRINOLARINGOLOGIA, "telefono": "333444555"},
     ]
 
     # Crear pacientes
+
+    pacientes = []
     for paciente_data in pacientes_data:
-        paciente = Paciente(
-            nombre=paciente_data["nombre"],
-            apellido=paciente_data["apellido"],
-            fecha_nacimiento=date.fromisoformat(paciente_data["fecha_nacimiento"]),
-            email=paciente_data["email"],
-            telefono=paciente_data["telefono"]
-        )
-        db.session.add(paciente)
+        if verificar_paciente_existente(paciente_data["nombre"], paciente_data["apellido"]):
+            continue
+        else:
+            paciente = Paciente.crear_paciente(
+                nombre=paciente_data["nombre"],
+                apellido=paciente_data["apellido"],
+                fecha_nacimiento=date.fromisoformat(paciente_data["fecha_nacimiento"]),
+                email=paciente_data["email"],
+                telefono=paciente_data["telefono"]
+            )
+        pacientes.append(paciente)
 
     # Crear medicos
-    for medico_data in medicos_data:
-        medico = Medico(
-            nombre=medico_data["nombre"],
-            apellido=medico_data["apellido"],
-            especialidad=medico_data["especialidad"],
-            telefono=medico_data["telefono"]
-        )
-        db.session.add(medico)
 
-    # Confirmar inserción en la base de datos
-    db.session.commit()
+    medicos = []
+    for medico_data in medicos_data:
+        if verificar_medico_existente(medico_data["nombre"], medico_data["apellido"]):
+            continue
+        else:
+            medico = Medico.crear_medico(
+                nombre=medico_data["nombre"],
+                apellido=medico_data["apellido"],
+                especialidad=medico_data["especialidad"],
+                telefono=medico_data["telefono"]
+            )
+        medicos.append(medico)
+
+    fecha_inicio = date.today()
+    for dia in range(7):
+        fecha = fecha_inicio + timedelta(days=dia)
+        for paciente in pacientes:
+            for medico in medicos:
+                for bloque in [BloqueHorario.BLOQUE_1, BloqueHorario.BLOQUE_2, BloqueHorario.BLOQUE_3]:
+                    cita = reservar_cita_medica(
+                        id_paciente=paciente.id_paciente,
+                        id_medico=medico.id_medico,
+                        fecha=fecha,
+                        bloque=bloque
+                    )
+                    if cita:
+                        print(f"Cita creada para el paciente {paciente.nombre} con el médico {medico.nombre} en la fecha {fecha} y bloque {bloque}")
+
 
 def asignar_citas_medicos():
     """Asigna 2 horarios a cada médico con diferentes pacientes en distintos bloques y fechas."""
