@@ -1,52 +1,9 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Especialistas Médicos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .hero-section {
-            background: linear-gradient(rgba(0, 123, 255, 0.6), rgba(0, 123, 255, 0.6)), url('https://media.istockphoto.com/id/1437830105/es/foto/toma-recortada-de-una-enfermera-sostiene-la-mano-de-su-paciente-mayor-dar-apoyo-m%C3%A9dico-que.jpg?s=1024x1024&w=is&k=20&c=-D-pYn8iLs3Fcs4UoOMPhFUsOhjcNUyltffKMwPwbq4=');
-            background-size: cover;
-            color: white;
-            padding: 100px 0;
-            text-align: center;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            transition: 0.3s;
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('index') }}">Centro Médico</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">Inicio</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{{ url_for('especialistas') }}">Especialistas</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('centroayuda') }}">Centro de Ayuda</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends 'base.html' %}
 
-    <section class="hero-section">
+{% block title %}Especialistas - Centro Médico{% endblock %}
+
+{% block content %}
+<section class="hero-section">
         <div class="container">
             <h1 class="display-4">Nuestros Especialistas</h1>
             <p class="lead">Conoce a nuestros especialistas altamente calificados y encuentra el mejor cuidado para ti.</p>
@@ -79,11 +36,4 @@
             </div>
         </div>
     </div>
-
-    <footer class="bg-light text-center text-lg-start mt-5">
-        <div class="container p-4">
-            <p>&copy; 2024 Centro Médico. Todos los derechos reservados.</p>
-        </div>
-    </footer>
-</body>
-</html>
+{% endblock %}
