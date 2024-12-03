@@ -49,6 +49,25 @@ def parse_bloque(bloque):
     else:
         raise TypeError(f"Tipo de entrada invalido: {type(bloque)}. Debe ser str o BloqueHorario.")
 
+def parse_nombre(nombre_completo):
+    '''Funcion revisara el nombre completo y tomara la primera palabra como nombre y el resto como apellido'''
+    if isinstance(nombre_completo, str):
+        nombre_completo = nombre_completo.split()
+        if len(nombre_completo) == 0:
+            raise ValueError(f'Nombre no valido: {nombre_completo}.')
+        return nombre_completo[0], ' '.join(nombre_completo[1:])
+    else:
+        raise TypeError(f"Tipo de entrada invalido: {type(nombre_completo)}. Debe ser str.")
+
+def parse_rut(rut):
+    '''Funcion revisara el rut y lo dejara en el formato XXXXXXXX-X'''
+    if isinstance(rut, str):
+        rut = rut.replace('.', '')
+        if '-' not in rut:
+            rut = f'{rut[:-1]}-{rut[-1]}'
+        return rut
+    else:
+        raise TypeError(f"Tipo de entrada invalido: {type(rut)}. Debe ser str.")
 
 #las siguientes funciones determinan el bloque segun la string, no se de que otra forma pasarlo entre las paginas
 #y probablemente sea mal codigo pero funciona

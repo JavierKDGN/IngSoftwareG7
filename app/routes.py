@@ -4,7 +4,7 @@ from flask import render_template, redirect, url_for, request, jsonify, session
 from app import app
 from app.models import *
 from app.services.servicio_citas import reservar_cita_medica
-from app.utils import bloque_a_rango_horario
+from app.utils import bloque_a_rango_horario, parse_nombre, parse_rut
 
 
 # Este archivo define las rutas de la aplicacion
@@ -85,15 +85,20 @@ def datos_paciente():
         fecha = request.form.get('fecha')
         bloque = request.form.get('bloque')
         nombre_paciente = request.form.get('nombre_paciente')
+        rut_paciente = request.form.get('rut_paciente')
         telefono = request.form.get('telefono')
         email = request.form.get('email')
-
-        print(bloque)
         bloque = parse_bloque(bloque)
 
-        paciente_id = 1  #cambiar
+        nombre_paciente, apellido_paciente = parse_nombre(nombre_paciente)
+        rut_paciente = parse_rut(rut_paciente)
+
+        paciente = Paciente.crear_paciente(rut=rut_paciente, nombre=nombre_paciente,apellido=apellido_paciente, telefono=telefono, email=email)
+        paciente_id = paciente.id_paciente
         print(f"Reservando cita para paciente {paciente_id} con médico {id_medico} el {fecha} en el bloque {bloque}")
         cita = reservar_cita_medica(paciente_id, id_medico, fecha, bloque)
+
+        print(cita)
         if cita:
             return redirect(url_for('cita_confirmada', cita_id=cita.id_cita))
         else:

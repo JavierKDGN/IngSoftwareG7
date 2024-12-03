@@ -73,15 +73,22 @@ class Paciente(db.Model):
         return cls.query.all()
 
     @classmethod
-    def crear_paciente(cls, rut, nombre, apellido, fecha_nacimiento, email, telefono):
+    def crear_paciente(cls, rut, nombre, apellido, email, telefono, fecha_nacimiento="2000-01-01"):
         """Crea un nuevo paciente y lo retorna."""
         fecha_nacimiento = parse_fecha(fecha_nacimiento)
-        nuevo_paciente = cls(
-            rut=rut, nombre=nombre, apellido=apellido, fecha_nacimiento=fecha_nacimiento, email=email, telefono=telefono
-        )
-        db.session.add(nuevo_paciente)
-        db.session.commit()
-        return nuevo_paciente
+
+        nuevo_paciente = None
+
+        if cls.get_paciente_by_rut(rut):
+            print(f'Paciente con rut {rut} ya existe')
+            return cls.get_paciente_by_rut(rut)
+        else:
+            nuevo_paciente = cls(
+                rut=rut, nombre=nombre, apellido=apellido, fecha_nacimiento=fecha_nacimiento, email=email, telefono=telefono
+            )
+            db.session.add(nuevo_paciente)
+            db.session.commit()
+            return nuevo_paciente
 
     def __repr__(self):
         return (f'<Paciente(id_paciente={self.id_paciente}, rut={self.rut},nombre={self.nombre}, '

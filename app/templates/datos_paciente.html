@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Datos del Paciente{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Reserva de Cita Médica</h1>
+    <h2 class="text-center mb-4">Datos del Paciente</h2>
+
+    <form action="{{ url_for('datos_paciente') }}" method="POST" class="card p-4 shadow-sm">
+        <input type="hidden" name="id_medico" value="{{ medico.id_medico }}">
+        <input type="hidden" name="fecha" value="{{ fecha }}">
+        <input type="hidden" name="bloque" value="{{ bloque }}">
+
+        <div class="mb-3">
+            <label for="nombre_paciente" class="form-label">Nombre Completo:</label>
+            <input type="text" class="form-control" id="nombre_paciente" name="nombre_paciente" placeholder="Ej: Juan Pérez" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="rut_paciente" class="form-label">RUT:</label>
+            <input type="text" class="form-control" id="rut_paciente" name="rut_paciente" placeholder="Ej: 12345789-k" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="telefono" class="form-label">Teléfono:</label>
+            <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="+56912345678" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="email" class="form-label">Correo Electrónico:</label>
+            <input type="email" class="form-control" id="email" name="email" placeholder="ejemplo@correo.com" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Confirmar Reserva</button>
+    </form>
+
+</div>
+{% endblock %}
