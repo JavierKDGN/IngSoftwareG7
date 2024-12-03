@@ -35,7 +35,6 @@ class BloqueHorario(Enum):
     BLOQUE_17 = 17  # 17:00 - 17:30
     BLOQUE_18 = 18  # 17:30 - 18:00
 
-
 class Especialidad(Enum):
     CARDIOLOGIA = "Cardiología"
     PEDIATRIA = "Pediatría"
@@ -58,8 +57,9 @@ class Paciente(db.Model):
     telefono: so.Mapped[Optional[str]] = so.mapped_column(sa.String(15))
 
     @classmethod
-    def get_paciente(cls, id_paciente):
-        return cls.query.get(id_paciente)
+    def get_paciente_by_id(cls, id_paciente):
+        """Obtiene un paciente por su ID."""
+        return cls.query.filter_by(id_paciente=id_paciente).first()
 
     @classmethod
     def get_paciente_by_rut(cls, rut):
@@ -67,12 +67,16 @@ class Paciente(db.Model):
 
     @classmethod
     def get_all_pacientes(cls):
+        """Obtiene una lista de todos los pacientes"""
         return cls.query.all()
 
     @classmethod
-    def crear_paciente(cls, nombre, apellido, fecha_nacimiento, email, telefono):
+    def crear_paciente(cls, rut, nombre, apellido, fecha_nacimiento, email, telefono):
+        """Crea un nuevo paciente y lo retorna."""
         fecha_nacimiento = parse_fecha(fecha_nacimiento)
-        nuevo_paciente = cls(nombre=nombre, apellido=apellido, fecha_nacimiento=fecha_nacimiento, email=email, telefono=telefono)
+        nuevo_paciente = cls(
+            rut=rut, nombre=nombre, apellido=apellido, fecha_nacimiento=fecha_nacimiento, email=email, telefono=telefono
+        )
         db.session.add(nuevo_paciente)
         db.session.commit()
         return nuevo_paciente
@@ -100,6 +104,7 @@ class Medico(db.Model):
 
     @classmethod
     def get_medico_por_especialidad(cls, especialidad):
+        '''Retorna los medicos de una especialidad'''
         if isinstance(especialidad, str):
             try:
                 especialidad = Especialidad[especialidad.upper()]
@@ -113,6 +118,7 @@ class Medico(db.Model):
 
     @classmethod
     def is_disponible_en_fecha(cls, fecha, id_medico):
+        '''Retorna True si el medico tiene bloques disponibles en la fecha'''
         bloques_disponibles = Horario.get_bloques_disp_en_fecha_de_medico(fecha, id_medico)
         return len(bloques_disponibles) > 0
 
@@ -180,6 +186,7 @@ class Horario(db.Model):
 
     @classmethod
     def get_bloques_disp_en_fecha_de_medico(cls, fecha, id_medico):
+        '''Retorna los bloques disponibles en una fecha para el medico'''
         bloques_ocupados = cls.get_bloques_ocup_en_fecha_de_medico(fecha, id_medico)
         bloques_ocupados = [bloque.bloque for bloque in bloques_ocupados]
         bloques_disponibles = [bloque for bloque in BloqueHorario if bloque not in bloques_ocupados]
