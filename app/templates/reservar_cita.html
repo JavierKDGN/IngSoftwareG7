@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Reservar Cita{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Reservar Cita Médica</h1>
+
+    <!-- Selección de Especialidad -->
+    <form method="POST" action="{{ url_for('reservar_cita') }}">
+        <div class="mb-3">
+            <label for="especialidad" class="form-label">Seleccionar Especialidad</label>
+            <select class="form-select" name="especialidad" id="especialidad" required>
+                {% for especialidad in especialidades %}
+                <option value="{{ especialidad }}">{{ especialidad }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Selección de Médico -->
+        {% if medicos %}
+        <div class="mb-3">
+            <label for="medico" class="form-label">Seleccionar Médico</label>
+            <select class="form-select" name="medico" id="medico" required>
+                {% for medico in medicos %}
+                <option value="{{ medico.id_medico }}">Dr. {{ medico.apellido }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <!-- Selección de Fecha -->
+        {% if fechas %}
+        <div class="mb-3">
+            <label for="fecha" class="form-label">Seleccionar Fecha</label>
+            <select class="form-select" name="fecha" id="fecha" required>
+                {% for fecha in fechas %}
+                <option value="{{ fecha }}">{{ fecha }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <!-- Selección de Bloque -->
+        {% if bloques %}
+        <div class="mb-3">
+            <label for="bloque" class="form-label">Seleccionar Bloque Horario</label>
+            <select class="form-select" name="bloque" id="bloque" required>
+                {% for bloque in bloques %}
+                <option value="{{ bloque }}">{{ bloque }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <!-- Botón Reservar -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary">Reservar Cita</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

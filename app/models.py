@@ -4,9 +4,8 @@ from enum import Enum
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from flask_sqlalchemy import SQLAlchemy
-
 from app import db
-from app.utils import parse_fecha
+
 
 class EstadoCita(Enum):
     AGENDADA = 1
@@ -36,14 +35,17 @@ class BloqueHorario(Enum):
     BLOQUE_18 = 18  # 17:30 - 18:00
 
 class Especialidad(Enum):
-    CARDIOLOGIA = "Cardiología"
-    PEDIATRIA = "Pediatría"
-    DERMATOLOGIA = "Dermatología"
-    GINECOLOGIA = "Ginecología"
-    NEUROLOGIA = "Neurología"
-    OTORRINOLARINGOLOGIA = "Otorrinolaringología"
-    PSIQUIATRIA = "Psiquiatría"
-    TRAUMATOLOGIA = "Traumatología"
+    CARDIOLOGIA = "Cardiologia"
+    PEDIATRIA = "Pediatria"
+    DERMATOLOGIA = "Dermatologia"
+    GINECOLOGIA = "Ginecologia"
+    NEUROLOGIA = "Neurologia"
+    OTORRINOLARINGOLOGIA = "Otorrinolaringologia"
+    PSIQUIATRIA = "Psiquiatria"
+    TRAUMATOLOGIA = "Traumatologia"
+
+from app.utils import parse_fecha, parse_especialidad
+
 
 # Tabla Paciente
 class Paciente(db.Model):
@@ -105,15 +107,7 @@ class Medico(db.Model):
     @classmethod
     def get_medico_por_especialidad(cls, especialidad):
         '''Retorna los medicos de una especialidad'''
-        if isinstance(especialidad, str):
-            try:
-                especialidad = Especialidad[especialidad.upper()]
-            except KeyError:
-                raise ValueError(f"La especialidad '{especialidad}' no es válida. Opciones: {[e.name for e in Especialidad]}")
-
-        if not isinstance(especialidad, Especialidad):
-            raise ValueError(f"El argumento 'especialidad' debe ser un string o una instancia de 'Especialidad'")
-
+        especialidad = parse_especialidad(especialidad)
         return cls.query.filter_by(especialidad=especialidad).all()
 
     @classmethod
@@ -134,10 +128,7 @@ class Medico(db.Model):
 
     @classmethod
     def crear_medico(cls, nombre, apellido, especialidad, telefono):
-        try:
-            especialidad = Especialidad[especialidad.upper()]
-        except KeyError:
-            raise ValueError(f"La especialidad '{especialidad}' no es válida. Opciones: {[e.name for e in Especialidad]}")
+        especialidad = parse_especialidad(especialidad)
         nuevo_medico = cls(nombre=nombre, apellido=apellido, especialidad=especialidad, telefono=telefono)
         db.session.add(nuevo_medico)
         db.session.commit()

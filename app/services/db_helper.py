@@ -6,6 +6,7 @@ from app.services.servicio_citas import reservar_cita_medica
 import sqlalchemy as sa
 
 
+
 def formatear_base_datos():
     '''Reestablece la base de datos a un estado inicial y realiza la migracion para actualizarla'''
     seguro = input("Seguro? Se borraran todos los datos, esta funcion es solo para testear, escriba no para cancelar")
@@ -79,6 +80,29 @@ def popular_base_datos():
                     if cita:
                         print(f"Cita creada para el paciente {paciente.nombre} con el médico {medico.nombre} en la fecha {fecha} y bloque {bloque}")
 
+
+def popular_solo_medicos():
+    """Crea datos de prueba para la base de datos: 5 médicos."""
+    medicos_data = [
+        {"nombre": "Jose", "apellido": "Martinez", "especialidad": Especialidad.CARDIOLOGIA, "telefono": "111222333"},
+        {"nombre": "Laura", "apellido": "Fernandez", "especialidad": Especialidad.DERMATOLOGIA, "telefono": "444555666"},
+        {"nombre": "Martin", "apellido": "Rodriguez", "especialidad": Especialidad.PEDIATRIA, "telefono": "777888999"},
+        {"nombre": "Sofia", "apellido": "Gonzalez", "especialidad": Especialidad.NEUROLOGIA, "telefono": "000111222"},
+        {"nombre": "Diego", "apellido": "Lopez", "especialidad": Especialidad.OTORRINOLARINGOLOGIA, "telefono": "333444555"},
+    ]
+
+    medicos = []
+    for medico_data in medicos_data:
+        if verificar_medico_existente(medico_data["nombre"], medico_data["apellido"]):
+            continue
+        else:
+            medico = Medico.crear_medico(
+                nombre=medico_data["nombre"],
+                apellido=medico_data["apellido"],
+                especialidad=medico_data["especialidad"],
+                telefono=medico_data["telefono"]
+            )
+        medicos.append(medico)
 
 def asignar_citas_medicos():
     """Asigna 2 horarios a cada médico con diferentes pacientes en distintos bloques y fechas."""
@@ -181,3 +205,4 @@ def verificar_paciente_existente(nombre, apellido):
 def verificar_medico_existente(nombre, apellido):
     '''Verifica si un médico con el nombre especificado ya existe en la base de datos'''
     return Medico.query.filter_by(nombre=nombre, apellido=apellido).first()
+
