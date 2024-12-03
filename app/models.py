@@ -128,7 +128,7 @@ class Medico(db.Model):
         '''Retorna las fechas disponibles para agendar una cita con el medico en los proximos dias'''
         fechas_disponibles = []
         for i in range(dias):
-            fecha = date.today() + timedelta(days=i)
+            fecha = date.today() + timedelta(days=1 + i)
             if cls.is_disponible_en_fecha(fecha, id_medico):
                 fechas_disponibles.append(fecha)
         return fechas_disponibles
