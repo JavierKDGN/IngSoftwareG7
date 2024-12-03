@@ -68,6 +68,10 @@ class Paciente(db.Model):
         return cls.query.filter_by(rut=rut).first()
 
     @classmethod
+    def get_paciente_by_email(cls, email):
+        return cls.query.filter_by(email=email).first()
+
+    @classmethod
     def get_all_pacientes(cls):
         """Obtiene una lista de todos los pacientes"""
         return cls.query.all()

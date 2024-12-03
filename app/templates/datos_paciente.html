@@ -14,22 +14,31 @@
 
         <div class="mb-3">
             <label for="nombre_paciente" class="form-label">Nombre Completo:</label>
-            <input type="text" class="form-control" id="nombre_paciente" name="nombre_paciente" placeholder="Ej: Juan Pérez" required>
+            <input type="text" class="form-control" id="nombre_paciente" name="nombre_paciente"
+                   placeholder="Ej: Juan Pérez" value="{{ request.form.get('nombre_paciente', '') }}" required>
         </div>
 
         <div class="mb-3">
             <label for="rut_paciente" class="form-label">RUT:</label>
-            <input type="text" class="form-control" id="rut_paciente" name="rut_paciente" placeholder="Ej: 12345789-k" required>
+            <input type="text" class="form-control" id="rut_paciente" name="rut_paciente"
+                   placeholder="Ej: 12345789-k" value="{{ request.form.get('rut_paciente', '') }}" required>
         </div>
 
         <div class="mb-3">
             <label for="telefono" class="form-label">Teléfono:</label>
-            <input type="tel" class="form-control" id="telefono" name="telefono" placeholder="+56912345678" required>
+            <input type="tel" class="form-control" id="telefono" name="telefono"
+                   placeholder="+56912345678" value="{{ request.form.get('telefono', '') }}" required>
         </div>
 
         <div class="mb-3">
             <label for="email" class="form-label">Correo Electrónico:</label>
-            <input type="email" class="form-control" id="email" name="email" placeholder="ejemplo@correo.com" required>
+            <input type="email" class="form-control {% if error %}is-invalid{% endif %}" id="email" name="email"
+                   placeholder="ejemplo@correo.com" value="{{ request.form.get('email', '') }}" required>
+            {% if error %}
+            <div class="invalid-feedback">
+                {{ error }}
+            </div>
+            {% endif %}
         </div>
 
         <button type="submit" class="btn btn-primary w-100">Confirmar Reserva</button>

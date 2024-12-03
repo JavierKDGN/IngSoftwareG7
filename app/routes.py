@@ -88,8 +88,21 @@ def datos_paciente():
         rut_paciente = request.form.get('rut_paciente')
         telefono = request.form.get('telefono')
         email = request.form.get('email')
-        bloque = parse_bloque(bloque)
 
+        # Verificar si el email ya existe y pertenece a otro paciente
+        paciente_email = Paciente.get_paciente_by_email(email)
+        if paciente_email and paciente_email.rut != rut_paciente:
+            # Mostrar mensaje de error en el formulario
+            medico = Medico.query.get_or_404(id_medico)
+            return render_template(
+                'datos_paciente.html',
+                medico=medico,
+                fecha=fecha,
+                bloque=bloque,
+                error="El email ingresado ya esta registrado. Por favor, ingrese otro email."
+            )
+
+        bloque = parse_bloque(bloque)
         nombre_paciente, apellido_paciente = parse_nombre(nombre_paciente)
         rut_paciente = parse_rut(rut_paciente)
 
