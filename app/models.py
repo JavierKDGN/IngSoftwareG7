@@ -48,6 +48,7 @@ class Especialidad(Enum):
 # Tabla Paciente
 class Paciente(db.Model):
     id_paciente: so.Mapped[int] = so.mapped_column(primary_key=True)
+    rut: so.Mapped[str] = so.mapped_column(sa.String(12), unique=True, nullable=False)
 
     nombre: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     apellido: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
@@ -56,23 +57,32 @@ class Paciente(db.Model):
     telefono: so.Mapped[Optional[str]] = so.mapped_column(sa.String(15))
 
     @classmethod
-    def get_paciente(cls, id_paciente):
-        return cls.query.get(id_paciente)
+    def get_paciente_by_id(cls, id_paciente):
+        """Obtiene un paciente por su ID."""
+        return cls.query.filter_by(id_paciente=id_paciente).first()
+
+    @classmethod
+    def get_paciente_by_rut(cls, rut):
+        return cls.query.filter_by(rut=rut).first()
 
     @classmethod
     def get_all_pacientes(cls):
+        """Obtiene una lista de todos los pacientes"""
         return cls.query.all()
 
     @classmethod
-    def crear_paciente(cls, nombre, apellido, fecha_nacimiento, email, telefono):
+    def crear_paciente(cls, rut, nombre, apellido, fecha_nacimiento, email, telefono):
+        """Crea un nuevo paciente y lo retorna."""
         fecha_nacimiento = parse_fecha(fecha_nacimiento)
-        nuevo_paciente = cls(nombre=nombre, apellido=apellido, fecha_nacimiento=fecha_nacimiento, email=email, telefono=telefono)
+        nuevo_paciente = cls(
+            rut=rut, nombre=nombre, apellido=apellido, fecha_nacimiento=fecha_nacimiento, email=email, telefono=telefono
+        )
         db.session.add(nuevo_paciente)
         db.session.commit()
         return nuevo_paciente
 
     def __repr__(self):
-        return (f'<Paciente(id_paciente={self.id_paciente}, nombre={self.nombre}, '
+        return (f'<Paciente(id_paciente={self.id_paciente}, rut={self.rut},nombre={self.nombre}, '
                 f'apellido={self.apellido}, fecha_nacimiento={self.fecha_nacimiento}, '
                 f'email={self.email}, telefono={self.telefono})>')
 
@@ -84,7 +94,6 @@ class Medico(db.Model):
     apellido: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     especialidad: so.Mapped[Especialidad] = so.mapped_column(sa.Enum(Especialidad), nullable=False)
     telefono: so.Mapped[Optional[str]] = so.mapped_column(sa.String(15))
-
     @classmethod
     def get_medico(cls, id_medico):
         return cls.query.get(id_medico)
@@ -95,6 +104,7 @@ class Medico(db.Model):
 
     @classmethod
     def get_medico_por_especialidad(cls, especialidad):
+        '''Retorna los medicos de una especialidad'''
         if isinstance(especialidad, str):
             try:
                 especialidad = Especialidad[especialidad.upper()]
@@ -108,6 +118,7 @@ class Medico(db.Model):
 
     @classmethod
     def is_disponible_en_fecha(cls, fecha, id_medico):
+        '''Retorna True si el medico tiene bloques disponibles en la fecha'''
         bloques_disponibles = Horario.get_bloques_disp_en_fecha_de_medico(fecha, id_medico)
         return len(bloques_disponibles) > 0
 
@@ -123,6 +134,10 @@ class Medico(db.Model):
 
     @classmethod
     def crear_medico(cls, nombre, apellido, especialidad, telefono):
+        try:
+            especialidad = Especialidad[especialidad.upper()]
+        except KeyError:
+            raise ValueError(f"La especialidad '{especialidad}' no es válida. Opciones: {[e.name for e in Especialidad]}")
         nuevo_medico = cls(nombre=nombre, apellido=apellido, especialidad=especialidad, telefono=telefono)
         db.session.add(nuevo_medico)
         db.session.commit()
@@ -171,6 +186,7 @@ class Horario(db.Model):
 
     @classmethod
     def get_bloques_disp_en_fecha_de_medico(cls, fecha, id_medico):
+        '''Retorna los bloques disponibles en una fecha para el medico'''
         bloques_ocupados = cls.get_bloques_ocup_en_fecha_de_medico(fecha, id_medico)
         bloques_ocupados = [bloque.bloque for bloque in bloques_ocupados]
         bloques_disponibles = [bloque for bloque in BloqueHorario if bloque not in bloques_ocupados]
