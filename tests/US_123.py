@@ -44,6 +44,7 @@ def test_interaccion_paciente():
     dbh.popular_base_datos()
     print("Ingrese sus datos de paciente: ")
     datos_test = {
+        "rut": "11111111-1",
         "nombre": "Test",
         "apellido": "User",
         "fecha_nacimiento": "1990-01-01",

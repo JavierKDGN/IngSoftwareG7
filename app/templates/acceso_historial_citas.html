@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial de Citas - Centro Médico{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <h1 class="display-4">Historial de Citas</h1>
+        <p class="lead">Consulta tus citas médicas pasadas y su estado.</p>
+    </div>
+</section>
+<div class="container mt-5">
+    <h1 class="text-center">Reserva de Cita Médica</h1>
+    <h2 class="text-center mb-4">Datos del Paciente</h2>
+
+    <form action="{{ url_for('acceso_historial_citas') }}" method="POST" class="card p-4 shadow-sm">
+
+        <div class="mb-3">
+            <label for="rut_paciente" class="form-label">RUT:</label>
+            <input type="text" class="form-control {% if error %}is-invalid{% endif %}" id="rut_paciente" name="rut_paciente"
+                   placeholder="Ej: 12345789-k" value="{{ request.form.get('rut_paciente', '') }}" required>
+            {% if error %}
+            <div class="invalid-feedback">
+                {{ error }}
+            </div>
+            {% endif %}
+        </div>
+
+
+        <button type="submit" class="btn btn-primary w-100">Confirmar</button>
+    </form>
+
+</div>
+{% endblock %}

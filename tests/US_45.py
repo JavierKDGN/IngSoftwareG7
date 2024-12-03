@@ -14,6 +14,8 @@ def test_historial_citas(id_paciente):
         print("-" * 30)
 
 if __name__ == '__main__':
+    test_historial_citas(1)
+    pass
     with app.app_context():
         print(Medico.get_all_medicos())
         medicos = Medico.get_medico_por_especialidad(Especialidad.CARDIOLOGIA)

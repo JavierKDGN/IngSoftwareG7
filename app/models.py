@@ -4,9 +4,8 @@ from enum import Enum
 import sqlalchemy as sa
 import sqlalchemy.orm as so
 from flask_sqlalchemy import SQLAlchemy
-
 from app import db
-from app.utils import parse_fecha
+
 
 class EstadoCita(Enum):
     AGENDADA = 1
@@ -36,14 +35,17 @@ class BloqueHorario(Enum):
     BLOQUE_18 = 18  # 17:30 - 18:00
 
 class Especialidad(Enum):
-    CARDIOLOGIA = "Cardiología"
-    PEDIATRIA = "Pediatría"
-    DERMATOLOGIA = "Dermatología"
-    GINECOLOGIA = "Ginecología"
-    NEUROLOGIA = "Neurología"
-    OTORRINOLARINGOLOGIA = "Otorrinolaringología"
-    PSIQUIATRIA = "Psiquiatría"
-    TRAUMATOLOGIA = "Traumatología"
+    CARDIOLOGIA = "Cardiologia"
+    PEDIATRIA = "Pediatria"
+    DERMATOLOGIA = "Dermatologia"
+    GINECOLOGIA = "Ginecologia"
+    NEUROLOGIA = "Neurologia"
+    OTORRINOLARINGOLOGIA = "Otorrinolaringologia"
+    PSIQUIATRIA = "Psiquiatria"
+    TRAUMATOLOGIA = "Traumatologia"
+
+from app.utils import parse_fecha, parse_especialidad, parse_bloque
+
 
 # Tabla Paciente
 class Paciente(db.Model):
@@ -66,20 +68,31 @@ class Paciente(db.Model):
         return cls.query.filter_by(rut=rut).first()
 
     @classmethod
+    def get_paciente_by_email(cls, email):
+        return cls.query.filter_by(email=email).first()
+
+    @classmethod
     def get_all_pacientes(cls):
         """Obtiene una lista de todos los pacientes"""
         return cls.query.all()
 
     @classmethod
-    def crear_paciente(cls, rut, nombre, apellido, fecha_nacimiento, email, telefono):
+    def crear_paciente(cls, rut, nombre, apellido, email, telefono, fecha_nacimiento="2000-01-01"):
         """Crea un nuevo paciente y lo retorna."""
         fecha_nacimiento = parse_fecha(fecha_nacimiento)
-        nuevo_paciente = cls(
-            rut=rut, nombre=nombre, apellido=apellido, fecha_nacimiento=fecha_nacimiento, email=email, telefono=telefono
-        )
-        db.session.add(nuevo_paciente)
-        db.session.commit()
-        return nuevo_paciente
+
+        nuevo_paciente = None
+
+        if cls.get_paciente_by_rut(rut):
+            print(f'Paciente con rut {rut} ya existe')
+            return cls.get_paciente_by_rut(rut)
+        else:
+            nuevo_paciente = cls(
+                rut=rut, nombre=nombre, apellido=apellido, fecha_nacimiento=fecha_nacimiento, email=email, telefono=telefono
+            )
+            db.session.add(nuevo_paciente)
+            db.session.commit()
+            return nuevo_paciente
 
     def __repr__(self):
         return (f'<Paciente(id_paciente={self.id_paciente}, rut={self.rut},nombre={self.nombre}, '
@@ -105,15 +118,7 @@ class Medico(db.Model):
     @classmethod
     def get_medico_por_especialidad(cls, especialidad):
         '''Retorna los medicos de una especialidad'''
-        if isinstance(especialidad, str):
-            try:
-                especialidad = Especialidad[especialidad.upper()]
-            except KeyError:
-                raise ValueError(f"La especialidad '{especialidad}' no es válida. Opciones: {[e.name for e in Especialidad]}")
-
-        if not isinstance(especialidad, Especialidad):
-            raise ValueError(f"El argumento 'especialidad' debe ser un string o una instancia de 'Especialidad'")
-
+        especialidad = parse_especialidad(especialidad)
         return cls.query.filter_by(especialidad=especialidad).all()
 
     @classmethod
@@ -127,21 +132,25 @@ class Medico(db.Model):
         '''Retorna las fechas disponibles para agendar una cita con el medico en los proximos dias'''
         fechas_disponibles = []
         for i in range(dias):
-            fecha = date.today() + timedelta(days=i)
+            fecha = date.today() + timedelta(days=1 + i)
             if cls.is_disponible_en_fecha(fecha, id_medico):
                 fechas_disponibles.append(fecha)
         return fechas_disponibles
 
     @classmethod
     def crear_medico(cls, nombre, apellido, especialidad, telefono):
-        try:
-            especialidad = Especialidad[especialidad.upper()]
-        except KeyError:
-            raise ValueError(f"La especialidad '{especialidad}' no es válida. Opciones: {[e.name for e in Especialidad]}")
+        especialidad = parse_especialidad(especialidad)
         nuevo_medico = cls(nombre=nombre, apellido=apellido, especialidad=especialidad, telefono=telefono)
         db.session.add(nuevo_medico)
         db.session.commit()
         return nuevo_medico
+
+    def get_nombre_medico(self, id_medico = None):
+        if id_medico:
+            medico = Medico.get_medico(id_medico)
+            return f'{medico.nombre} {medico.apellido}'
+        else:
+            return f'{self.nombre} {self.apellido}'
 
     def __repr__(self):
         return (f'<Medico(id_medico={self.id_medico}, nombre={self.nombre}, apellido={self.apellido} '
@@ -170,6 +179,7 @@ class Horario(db.Model):
     def get_bloque_ocupado(cls, fecha, bloque, id_medico):
         '''Retorna el bloque ocupado en una fecha por medico específico'''
         fecha = parse_fecha(fecha)
+        bloque = parse_bloque(bloque)
         return cls.query.filter_by(fecha=fecha, bloque=bloque, id_medico=id_medico).first()
 
     @classmethod
@@ -196,12 +206,14 @@ class Horario(db.Model):
     def is_bloque_disponible(cls, fecha, bloque, id_medico):
         '''Retorna True si el bloque está disponible en la fecha para el medico'''
         fecha = parse_fecha(fecha)
+        bloque = parse_bloque(bloque)
         bloque_ocupado = cls.query.filter_by(fecha=fecha, bloque=bloque, id_medico=id_medico).first()
         return bloque_ocupado is None # True si esta disponible, False si ocupado
 
     @classmethod
     def crear_bloque_ocupado(cls, fecha, bloque, id_medico):
         fecha = parse_fecha(fecha)
+        bloque = parse_bloque(bloque)
         nuevo_bloque = cls(fecha=fecha, bloque=bloque, id_medico=id_medico)
         db.session.add(nuevo_bloque)
         db.session.commit()

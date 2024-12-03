@@ -1,5 +1,6 @@
 from datetime import date
 from app.models import Horario, Cita, BloqueHorario, EstadoCita
+from app.utils import parse_bloque
 
 '''Funcionamiento del sistema de reservas
 El sistema de reservas se encarga de manejar las citas medicas entre los pacientes y los medicos.
@@ -15,7 +16,7 @@ en las funciones de models.py se debe crear una nueva funcion en la clase corres
 '''
 
 def reservar_cita_medica(id_paciente,id_medico,fecha,bloque):
-
+    bloque = parse_bloque(bloque)
     horario_ocupado = Horario.get_bloque_ocupado(fecha, bloque, id_medico)
 
     #Si el horario esta disponible
@@ -35,6 +36,7 @@ def reservar_cita_medica(id_paciente,id_medico,fecha,bloque):
 
 def cancelar_cita_medica(id_cita):
     cita_cancelada = Cita.cancelar_cita(id_cita)
+    print(cita_cancelada)
     if cita_cancelada:
         print(f"Cita {id_cita} cancelada correctamente")
         return cita_cancelada
