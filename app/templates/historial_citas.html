@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Historial de Citas - Centro Médico{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <h1 class="display-4">Historial de Citas</h1>
+        <p class="lead">Consulta tus citas médicas pasadas y su estado.</p>
+    </div>
+</section>
+
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-body">
+            <!-- Tabla de Historial de Citas -->
+            <h2 class="text-center mb-4">Tus Citas</h2>
+            {% if citas %}
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">Hora</th>
+                        <th scope="col">Especialista</th>
+                        <th scope="col">Especialidad</th>
+                        <th scope="col">Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cita in citas %}
+                    <tr>
+                        <td>{{ cita.horario.fecha }}</td>
+                        <td>{{ cita.horario.bloque.value+8 }}:00</td>
+                        <td>{{ cita.medico.nombre }} {{ cita.medico.apellido }}</td>
+                        <td>{{ cita.medico.especialidad.name }}</td>
+                        <td>{{ cita.estado.name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="text-center">No tienes citas registradas en tu historial.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
