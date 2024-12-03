@@ -5,8 +5,7 @@
 {% block content %}
 <div class="container mt-5">
     <h1 class="text-center">Seleccionar Especialidad y Médico</h1>
-    <form id="form-reserva" method="POST">
-        <!-- Selección de Especialidad -->
+    <form id="form-reserva" method="POST" action="{{ url_for('seleccionar_especialista') }}">
         <!-- Selección de Especialidad -->
         <div class="mb-3">
             <label for="especialidad" class="form-label">Seleccionar Especialidad</label>
@@ -15,7 +14,7 @@
                     Seleccione una especialidad
                 </option>
                 {% for especialidad in especialidades %}
-                <option value="{{ especialidad }}" {% if request.form.get('especialidad') == especialidad %}selected{% endif %} >
+                <option value="{{ especialidad }}" {% if request.form.get('especialidad') == especialidad %}selected{% endif %}>
                     {{ especialidad }}
                 </option>
                 {% endfor %}
@@ -30,6 +29,7 @@
             </select>
         </div>
 
+        <!-- Selección de Fecha -->
         <div class="mb-3" id="disponibilidad-container" style="display: none;">
             <h3>Disponibilidad del Médico</h3>
             <div>
@@ -38,111 +38,105 @@
                     <option value="" disabled selected>Seleccione una fecha</option>
                 </select>
             </div>
+
+            <!-- Selección de Bloque -->
             <div>
-                <label for="bloque" class="form-label">Bloques de la fecha libres</label>
+                <label for="bloque" class="form-label">Bloques de la fecha libres:</label>
                 <select class="form-select" name="bloque" id="bloque" required>
                     <option value="" disabled selected>Seleccione un bloque</option>
                 </select>
             </div>
         </div>
 
-        <!-- Otros campos -->
+        <!-- Botón de reserva -->
         <button type="submit" class="btn btn-primary">Reservar</button>
     </form>
-<script>
-document.getElementById('especialidad').addEventListener('change', function() {
-    const especialidad = this.value;
-    const especialistaContainer = document.getElementById('especialista-container');
-    const especialistaSelect = document.getElementById('especialista');
-    const disponibilidadContainer = document.getElementById('disponibilidad-container');
-    const fechaSelect = document.getElementById('fecha');
-    const bloqueSelect = document.getElementById('bloque');
 
-    // Reiniciar campos dependientes
-    especialistaSelect.innerHTML = '<option value="" disabled selected>Seleccione un especialista</option>';
-    fechaSelect.innerHTML = '<option value="" disabled selected>Seleccione una fecha</option>';
-    bloqueSelect.innerHTML = '<option value="" disabled selected>Seleccione un bloque</option>';
-    especialistaContainer.style.display = 'none';
-    disponibilidadContainer.style.display = 'none';
+    <!-- Scripts -->
+    <script>
+        // Mantener los scripts para cargar especialistas, fechas y bloques
+        document.getElementById('especialidad').addEventListener('change', function() {
+            const especialidad = this.value;
+            const especialistaContainer = document.getElementById('especialista-container');
+            const especialistaSelect = document.getElementById('especialista');
+            const disponibilidadContainer = document.getElementById('disponibilidad-container');
+            const fechaSelect = document.getElementById('fecha');
+            const bloqueSelect = document.getElementById('bloque');
 
-    if (especialidad) {
-        fetch(`/especialistas/${especialidad}`)
-            .then(response => {
-                if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                return response.json();
-            })
-            .then(data => {
-                data.forEach(especialista => {
-                    const option = document.createElement('option');
-                    option.value = especialista.id;
-                    option.textContent = especialista.nombre;
-                    especialistaSelect.appendChild(option);
-                });
-                especialistaContainer.style.display = 'block';
-            })
-            .catch(error => console.error('Error al cargar especialistas:', error));
-    }
-});
+            especialistaSelect.innerHTML = '<option value="" disabled selected>Seleccione un especialista</option>';
+            fechaSelect.innerHTML = '<option value="" disabled selected>Seleccione una fecha</option>';
+            bloqueSelect.innerHTML = '<option value="" disabled selected>Seleccione un bloque</option>';
+            especialistaContainer.style.display = 'none';
+            disponibilidadContainer.style.display = 'none';
 
-document.getElementById('especialista').addEventListener('change', function() {
-    const especialistaId = this.value;
-    const disponibilidadContainer = document.getElementById('disponibilidad-container');
-    const fechaSelect = document.getElementById('fecha');
-    const bloqueSelect = document.getElementById('bloque');
+            if (especialidad) {
+                fetch(`/especialistas/${especialidad}`)
+                    .then(response => response.ok ? response.json() : Promise.reject('Error en el servidor'))
+                    .then(data => {
+                        data.forEach(especialista => {
+                            const option = document.createElement('option');
+                            option.value = especialista.id;
+                            option.textContent = especialista.nombre;
+                            especialistaSelect.appendChild(option);
+                        });
+                        especialistaContainer.style.display = 'block';
+                    })
+                    .catch(error => console.error(error));
+            }
+        });
 
-    // Reiniciar campos dependientes
-    fechaSelect.innerHTML = '<option value="" disabled selected>Seleccione una fecha</option>';
-    bloqueSelect.innerHTML = '<option value="" disabled selected>Seleccione un bloque</option>';
-    disponibilidadContainer.style.display = 'none';
+        document.getElementById('especialista').addEventListener('change', function() {
+            const especialistaId = this.value;
+            const disponibilidadContainer = document.getElementById('disponibilidad-container');
+            const fechaSelect = document.getElementById('fecha');
+            const bloqueSelect = document.getElementById('bloque');
 
-    if (especialistaId) {
-        fetch(`/especialistas/${especialistaId}/disponibilidad`)
-            .then(response => {
-                if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                return response.json();
-            })
-            .then(data => {
-                Object.keys(data).forEach(fecha => {
-                    const option = document.createElement('option');
-                    option.value = fecha;
-                    option.textContent = fecha;
-                    fechaSelect.appendChild(option);
-                });
-                disponibilidadContainer.style.display = 'block';
-            })
-            .catch(error => console.error('Error al cargar disponibilidad:', error));
-    }
-});
+            fechaSelect.innerHTML = '<option value="" disabled selected>Seleccione una fecha</option>';
+            bloqueSelect.innerHTML = '<option value="" disabled selected>Seleccione un bloque</option>';
+            disponibilidadContainer.style.display = 'none';
 
-document.getElementById('fecha').addEventListener('change', function() {
-    const fechaSeleccionada = this.value;
-    const bloqueSelect = document.getElementById('bloque');
-    const bloqueContainer = bloqueSelect.parentElement;
+            if (especialistaId) {
+                fetch(`/especialistas/${especialistaId}/disponibilidad`)
+                    .then(response => response.ok ? response.json() : Promise.reject('Error en el servidor'))
+                    .then(data => {
+                        Object.keys(data).forEach(fecha => {
+                            const option = document.createElement('option');
+                            option.value = fecha;
+                            option.textContent = fecha;
+                            fechaSelect.appendChild(option);
+                        });
+                        disponibilidadContainer.style.display = 'block';
+                    })
+                    .catch(error => console.error(error));
+            }
+        });
 
-    // Reiniciar bloque horario
-    bloqueSelect.innerHTML = '<option value="" disabled selected>Seleccione un bloque</option>';
-    bloqueContainer.style.display = 'none'; // Oculta inicialmente
+        document.getElementById('fecha').addEventListener('change', function() {
+            const fechaSeleccionada = this.value;
+            const bloqueSelect = document.getElementById('bloque');
+            bloqueSelect.innerHTML = '<option value="" disabled selected>Seleccione un bloque</option>';
 
-    if (fechaSeleccionada) {
-        fetch(`/especialistas/${document.getElementById('especialista').value}/disponibilidad`)
-            .then(response => {
-                if (!response.ok) throw new Error('Error en la respuesta del servidor');
-                return response.json();
-            })
-            .then(data => {
-                data[fechaSeleccionada].forEach(bloque => {
-                    const option = document.createElement('option');
-                    option.value = bloque;
-                    option.textContent = bloque;
-                    bloqueSelect.appendChild(option);
-                });
-                bloqueContainer.style.display = 'block'; // Muestra cuando hay datos
-            })
-            .catch(error => console.error('Error al cargar bloques horarios:', error));
-    }
-});
+            if (fechaSeleccionada) {
+                fetch(`/especialistas/${document.getElementById('especialista').value}/disponibilidad`)
+                    .then(response => response.ok ? response.json() : Promise.reject('Error en el servidor'))
+                    .then(data => {
+                        data[fechaSeleccionada].forEach(bloque => {
+                            const option = document.createElement('option');
+                            option.value = bloque;
+                            option.textContent = bloque;
+                            bloqueSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error(error));
+            }
+        });
 
-</script>
-
+        document.getElementById('form-reserva').addEventListener('submit', function() {
+            document.getElementById('hidden-especialidad').value = document.getElementById('especialidad').value;
+            document.getElementById('hidden-especialista').value = document.getElementById('especialista').value;
+            document.getElementById('hidden-fecha').value = document.getElementById('fecha').value;
+            document.getElementById('hidden-bloque').value = document.getElementById('bloque').value;
+        });
+    </script>
 </div>
 {% endblock %}
