@@ -31,7 +31,6 @@ def centroayuda():
 @app.route('/historial_citas')
 
 def historial_citas():
-    popular_base_datos()
     print(Horario.query.all())
     print(Cita.query.all())
     historial = Cita.get_citas_por_paciente(1)  # Suponiendo que 1 es el ID del paciente
