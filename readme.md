@@ -9,8 +9,8 @@ Este proyecto es un sistema de reservas desarrollado en Python utilizando el fra
 - `app/`
   - `__init__.py`: Inicializa la aplicación Flask y carga la configuración.
   - `routes.py`: Define las rutas de la aplicación.
-  - `templates/`
-    - `test.html`: Plantilla HTML para la página de prueba.
+  - `templates/`: Directorio con las plantillas HTML.
+  - `services`: Directorio con los servicios de la aplicación.
 - `migrations`: Directorio con las migraciones de la base de datos.
 - `config.py`: Archivo de configuración de la aplicación.
 - `sistema_reservas.py`: Punto de entrada de la aplicación.
@@ -59,7 +59,7 @@ flask db init
 
 Por ultimo para migrar (actualizar) la BD a su ultima version
 ```sh
-flask db upgrade 
+flask db upgrade head
 ```
 Si ocurre un error al correr, entonces se debe repetir el ultimo paso hasta que este en la ultima version
 ```sh
