@@ -112,11 +112,35 @@ def datos_paciente():
 
     return render_template('datos_paciente.html', medico=medico, fecha=fecha, bloque=bloque)
 
-@app.route('/cita_confirmada/<cita_id>')
-def cita_confirmada(cita_id):
+@app.route('/reservar/cita-confirmada')
+def cita_confirmada():
     """Muestra la confirmación de una cita exitosa."""
+    # obtener cita id de parametros de la url
+    cita_id = request.args.get('cita_id', type=int)
+    if not cita_id:
+        return redirect(url_for('index'))  # Redirige si no se pasa cita_id
+
+    # Recupera la cita y sus detalles
     cita = Cita.get_cita(cita_id)
-    return f"Cita reservada correctamente, ID: {cita.id_cita}"
+    if not cita:
+        return redirect(url_for('cita_rechazada'))  # Redirige si la cita no existe
+
+    print(cita)
+    medico = Medico.get_medico(cita.id_medico)
+    paciente = Paciente.get_paciente_by_id(cita.id_paciente)
+    bloque = Horario.get_bloque(cita.id_horario)
+    fecha = str(bloque.fecha)
+
+    hora = bloque_a_rango_horario(bloque.bloque)
+    nombre_medico = f"{medico.nombre} {medico.apellido}"
+    nombre_paciente = f"{paciente.nombre} {paciente.apellido}"
+
+    return render_template('cita_confirmada.html',
+                           nombre_medico=nombre_medico,
+                           especialidad=medico.especialidad,
+                           nombre_paciente=nombre_paciente,
+                           fecha=fecha,
+                           hora=hora)
 
 @app.route('/cita_rechazada')
 def cita_rechazada():
