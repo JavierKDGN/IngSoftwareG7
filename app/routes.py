@@ -27,11 +27,28 @@ def especialistas():
 def centroayuda():
     return render_template('centroayuda.html')
 
+@app.route('/acceso_historial_citas', methods=['GET', 'POST'])
+def acceso_historial_citas():
+    if request.method == 'POST':
+        rut_paciente = request.form.get('rut_paciente')
+        rut_paciente = parse_rut(rut_paciente)
+        paciente = Paciente.get_paciente_by_rut(rut_paciente)
+        print(paciente)
+        if paciente:
+            return redirect(url_for('historial_citas', paciente_id=paciente.id_paciente))
+        else:
+            return render_template('acceso_historial_citas.html',error="Paciente no encontrado")
+    return render_template('acceso_historial_citas.html')
+
 @app.route('/historial_citas')
 def historial_citas():
     print(Horario.query.all())
     print(Cita.query.all())
-    historial = Cita.get_citas_por_paciente(1)  # Suponiendo que 1 es el ID del paciente
+    paciente_id = request.args.get('paciente_id', type=int)
+    if not paciente_id:
+        return redirect(url_for('index'))
+
+    historial = Cita.get_citas_por_paciente(paciente_id)  # Suponiendo que 1 es el ID del paciente
     for cita in historial:
         print(f"- Cita ID: {cita.id_cita}")
         print(f"  Estado: {cita.estado.name}")
