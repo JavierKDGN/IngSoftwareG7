@@ -1,4 +1,5 @@
 from datetime import date
+from app.models import Especialidad
 
 def parse_fecha(fecha):
     """
@@ -20,3 +21,12 @@ def parse_fecha(fecha):
             raise ValueError(f'Formato de fecha incorrecto. Formato esperado: YYYY-MM-DD. Fecha recibida: {fecha}')
 
     raise TypeError(f"Tipo de entrada inválido: {type(fecha)}. Debe ser str o datetime.date.")
+
+def parse_especialidad(especialidad):
+    if isinstance(especialidad, Especialidad):
+        return especialidad
+    elif isinstance(especialidad, str):
+        try:
+            return Especialidad[especialidad.upper()]
+        except KeyError:
+            raise ValueError(f'Especialidad no válida: {especialidad}. Las especialidades válidas son: {", ".join([e.name for e in Especialidad])}')
