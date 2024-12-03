@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, request
+from flask import render_template, redirect, url_for, request, jsonify
 from app import app
 from app.models import *
 from app.services.servicio_citas import reservar_cita_medica
@@ -44,6 +44,28 @@ def seleccionar_especialista():
 
     return render_template('seleccionar_especialista.html', especialidades=especialidades, medicos=medicos)
 
+@app.route('/especialistas/<especialidad_name>')
+def obtener_especialistas(especialidad_name):
+    especialidad = Especialidad[especialidad_name]  # Convierte el nombre al Enum
+    especialistas = Medico.get_medico_por_especialidad(especialidad)
+    especialistas_data = [
+        {'id': medico.id_medico, 'nombre': medico.get_nombre_medico()}
+        for medico in especialistas
+    ]
+    return jsonify(especialistas_data)
+
+@app.route('/especialistas/<int:id_medico>/disponibilidad', methods=['GET'])
+def obtener_disponibilidad_medico(id_medico):
+    # Simulación de días disponibles (puedes ajustar según la lógica real)
+    dias_disponibles = 7
+    fechas = Medico.get_fechas_disponibles_hasta_dias(id_medico, dias_disponibles)
+
+    disponibilidad = {}
+    for fecha in fechas:
+        bloques = Horario.get_bloques_disp_en_fecha_de_medico(fecha, id_medico)
+        disponibilidad[str(fecha)] = [rango_horario_bloque(bloque) for bloque in bloques]
+
+    return jsonify(disponibilidad)
 
 @app.route('/reservar/<int:id_medico>', methods=['GET', 'POST'])
 def reservar_cita(id_medico):

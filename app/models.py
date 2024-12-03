@@ -134,6 +134,13 @@ class Medico(db.Model):
         db.session.commit()
         return nuevo_medico
 
+    def get_nombre_medico(self, id_medico = None):
+        if id_medico:
+            medico = Medico.get_medico(id_medico)
+            return f'{medico.nombre} {medico.apellido}'
+        else:
+            return f'{self.nombre} {self.apellido}'
+
     def __repr__(self):
         return (f'<Medico(id_medico={self.id_medico}, nombre={self.nombre}, apellido={self.apellido} '
                 f'especialidad={self.especialidad.name}, telefono={self.telefono})>')
