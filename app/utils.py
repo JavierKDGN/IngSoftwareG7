@@ -1,5 +1,5 @@
 from datetime import date
-from app.models import Especialidad
+from app.models import Especialidad, BloqueHorario
 
 def parse_fecha(fecha):
     """
@@ -30,3 +30,30 @@ def parse_especialidad(especialidad):
             return Especialidad[especialidad.upper()]
         except KeyError:
             raise ValueError(f'Especialidad no válida: {especialidad}. Las especialidades válidas son: {", ".join([e.name for e in Especialidad])}')
+
+def parse_bloque(bloque):
+    if isinstance(bloque, BloqueHorario):
+        return bloque
+    elif isinstance(bloque, str):
+        #Si se le pasa como BloqueHorario.BloqueX de la pagina
+        try:
+            bloque = bloque.replace("BloqueHorario.","").upper()
+            return BloqueHorario[bloque]
+        except KeyError:
+            raise ValueError(f'Bloque horario no válido: {bloque}. Los bloques válidos son: {", ".join([b.name for b in BloqueHorario])}')
+    elif isinstance(bloque, int):
+        try:
+            return BloqueHorario(bloque)
+        except ValueError:
+            raise ValueError(f'Bloque horario no válido: {bloque}. Los bloques válidos son: {", ".join([b.name for b in BloqueHorario])}')
+    else:
+        raise TypeError(f"Tipo de entrada inválido: {type(bloque)}. Debe ser str o BloqueHorario.")
+
+def rango_horario_bloque(bloque_num):
+    bloque_num = bloque_num.value if isinstance(bloque_num, BloqueHorario) else bloque_num
+    hora_inicio = 9 + (bloque_num - 1) // 2
+    minuto_inicio = 30 * ((bloque_num - 1) % 2)
+    hora_fin = 9 + bloque_num // 2
+    minuto_fin = 30 * (bloque_num % 2)
+
+    return f"{hora_inicio:02}:{minuto_inicio:02}-{hora_fin:02}:{minuto_fin:02}"

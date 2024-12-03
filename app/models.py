@@ -44,7 +44,7 @@ class Especialidad(Enum):
     PSIQUIATRIA = "Psiquiatria"
     TRAUMATOLOGIA = "Traumatologia"
 
-from app.utils import parse_fecha, parse_especialidad
+from app.utils import parse_fecha, parse_especialidad, parse_bloque
 
 
 # Tabla Paciente
@@ -161,6 +161,7 @@ class Horario(db.Model):
     def get_bloque_ocupado(cls, fecha, bloque, id_medico):
         '''Retorna el bloque ocupado en una fecha por medico específico'''
         fecha = parse_fecha(fecha)
+        bloque = parse_bloque(bloque)
         return cls.query.filter_by(fecha=fecha, bloque=bloque, id_medico=id_medico).first()
 
     @classmethod
@@ -187,12 +188,14 @@ class Horario(db.Model):
     def is_bloque_disponible(cls, fecha, bloque, id_medico):
         '''Retorna True si el bloque está disponible en la fecha para el medico'''
         fecha = parse_fecha(fecha)
+        bloque = parse_bloque(bloque)
         bloque_ocupado = cls.query.filter_by(fecha=fecha, bloque=bloque, id_medico=id_medico).first()
         return bloque_ocupado is None # True si esta disponible, False si ocupado
 
     @classmethod
     def crear_bloque_ocupado(cls, fecha, bloque, id_medico):
         fecha = parse_fecha(fecha)
+        bloque = parse_bloque(bloque)
         nuevo_bloque = cls(fecha=fecha, bloque=bloque, id_medico=id_medico)
         db.session.add(nuevo_bloque)
         db.session.commit()

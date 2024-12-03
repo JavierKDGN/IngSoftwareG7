@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for, request
 from app import app
 from app.models import *
 from app.services.servicio_citas import reservar_cita_medica
+from app.utils import rango_horario_bloque
 
 
 # Este archivo define las rutas de la aplicacion
@@ -24,45 +25,60 @@ def especialistas():
 def centroayuda():
     return render_template('centroayuda.html')
 
-@app.route('/reservar', methods=['GET', 'POST'])
-def reservar_cita():
+@app.route('/reservar/especialistas', methods=['GET', 'POST'])
+def seleccionar_especialista():
     especialidades = [e.name for e in Especialidad]
-    medicos, fechas, bloques = None, None, None
+    medicos = None
 
     if request.method == 'POST':
         especialidad = request.form.get('especialidad')
         id_medico = request.form.get('medico')
+
+        # Si se selecciona una especialidad, cargar los médicos
+        if especialidad:
+            medicos = Medico.get_medico_por_especialidad(especialidad)
+
+        # Si se selecciona un médico, redirigir a la página de reserva
+        if id_medico:
+            return redirect(url_for('reservar_cita', id_medico=id_medico))
+
+    return render_template('seleccionar_especialista.html', especialidades=especialidades, medicos=medicos)
+
+
+@app.route('/reservar/<int:id_medico>', methods=['GET', 'POST'])
+def reservar_cita(id_medico):
+    medico = Medico.query.get_or_404(id_medico)
+    fechas, bloques = None, None
+    bloque_string = {}
+
+    if request.method == 'POST':
         fecha = request.form.get('fecha')
         bloque = request.form.get('bloque')
 
-        #Si se selecciona especialidad cargar medicos
-        if especialidad and not id_medico:
-            medicos = Medico.get_medico_por_especialidad(especialidad)
-
-        #Si se selecciona medico cargar fechas
-        elif id_medico and not fecha:
-            dias_disponibles = 7
-            fechas = Medico.get_fechas_disponibles_hasta_dias(id_medico, dias_disponibles)
-
-        #Si se selecciona fecha cargar bloques
-        elif fecha and not bloque:
+        # Si se selecciona una fecha, cargar los bloques horarios
+        if fecha and not bloque:
             bloques = Horario.get_bloques_disp_en_fecha_de_medico(fecha, id_medico)
+            bloque_string = {bloque: rango_horario_bloque(bloque) for bloque in bloques}
 
-        #Si se selecciona bloque, reservar cita
+        # Si se selecciona un bloque, reservar la cita
         elif bloque:
-            bloque = BloqueHorario(int(bloque))
-            paciente_id = 1 #simular paciente
+            paciente_id = 1  # Simulación de paciente autenticado
             cita = reservar_cita_medica(paciente_id, id_medico, fecha, bloque)
             if cita:
                 return redirect(url_for('cita_confirmada', cita_id=cita.id_cita))
             else:
                 return redirect(url_for('cita_rechazada'))
 
-    return render_template('reservar_cita.html', especialidades=especialidades, medicos=medicos, fechas=fechas, bloques=bloques)
+    # Obtener fechas disponibles por default
+    dias_disponibles = 7
+    fechas = Medico.get_fechas_disponibles_hasta_dias(id_medico, dias_disponibles)
+
+    return render_template('reservar_cita.html', medico=medico, fechas=fechas, bloques=bloque_string)
+
 
 @app.route('/cita_confirmada/<cita_id>')
 def cita_confirmada(cita_id):
-    cita = Cita.get_cita_by_id(cita_id)
+    cita = Cita.get_cita(cita_id)
     return f"Cita reservada correctamente, ID: {cita.id_cita}"
 
 @app.route('/cita_rechazada')

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Seleccionar Especialidad{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Seleccionar Especialidad y Médico</h1>
+    <form method="POST" action="{{ url_for('seleccionar_especialista') }}">
+        <!-- Selección de Especialidad -->
+        <div class="mb-3">
+            <label for="especialidad" class="form-label">Seleccionar Especialidad</label>
+            <select class="form-select" name="especialidad" id="especialidad" required>
+                <option value="" disabled {% if not request.form.get('especialidad') %}selected{% endif %}>
+                    Seleccione una especialidad
+                </option>
+                {% for especialidad in especialidades %}
+                <option value="{{ especialidad }}" {% if request.form.get('especialidad') == especialidad %}selected{% endif %} >
+                    {{ especialidad }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Selección de Médico -->
+        {% if medicos %}
+        <div class="mb-3">
+            <label for="medico" class="form-label">Seleccionar Médico</label>
+            <select class="form-select" name="medico" id="medico" required>
+                <option value="" disabled {% if not request.form.get('medico') %}selected{% endif %}>
+                    Seleccione un médico
+                </option>
+                {% for medico in medicos %}
+                <option value="{{ medico.id_medico }}" {% if request.form.get('medico') == medico.id_medico|string %}selected{% endif %}>
+                    Dr. {{ medico.apellido }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <!-- Botón Continuar -->
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary">Continuar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
