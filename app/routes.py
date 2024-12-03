@@ -27,6 +27,21 @@ def especialistas():
 def centroayuda():
     return render_template('centroayuda.html')
 
+@app.route('/historial_citas')
+def historial_citas():
+    print(Horario.query.all())
+    print(Cita.query.all())
+    historial = Cita.get_citas_por_paciente(1)  # Suponiendo que 1 es el ID del paciente
+    for cita in historial:
+        print(f"- Cita ID: {cita.id_cita}")
+        print(f"  Estado: {cita.estado.name}")
+        print(f"  Médico: {cita.medico.nombre} {cita.medico.apellido} - {cita.medico.especialidad}")
+        print(f"  Fecha: {cita.horario.fecha}")
+        print(f"  Bloque Horario: {cita.horario.bloque.name}")
+        print("-" * 30)
+
+    return render_template('historial_citas.html', citas=historial)
+
 @app.route('/reservar/especialistas', methods=['GET', 'POST'])
 def seleccionar_especialista():
     especialidades = [e.name for e in Especialidad]
