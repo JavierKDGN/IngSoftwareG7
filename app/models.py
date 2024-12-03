@@ -47,7 +47,8 @@ class Especialidad(Enum):
 
 # Tabla Paciente
 class Paciente(db.Model):
-    id_paciente: so.Mapped[int] = so.mapped_column(primary_key=True)
+    rut: so.Mapped[str] = so.mapped_column(sa.String(12), primary_key=True)  # Clave primaria
+    id_paciente: so.Mapped[int] = so.mapped_column(unique=True, autoincrement=True)  # unico
 
     nombre: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     apellido: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
@@ -55,25 +56,35 @@ class Paciente(db.Model):
     email: so.Mapped[str] = so.mapped_column(sa.String(120), index=True, unique=True)
     telefono: so.Mapped[Optional[str]] = so.mapped_column(sa.String(15))
 
+    def get_paciente_by_rut(cls, rut):
+        """Obtiene un paciente por su RUT."""
+        return cls.query.get(rut)
+
     @classmethod
-    def get_paciente(cls, id_paciente):
-        return cls.query.get(id_paciente)
+    def get_paciente_by_id(cls, id_paciente):
+        """Obtiene un paciente por su ID."""
+        return cls.query.filter_by(id_paciente=id_paciente).first()
 
     @classmethod
     def get_all_pacientes(cls):
+        """Obtiene una lista de todos los pacientes"""
         return cls.query.all()
 
     @classmethod
-    def crear_paciente(cls, nombre, apellido, fecha_nacimiento, email, telefono):
+    def crear_paciente(cls, rut, nombre, apellido, fecha_nacimiento, email, telefono):
+        """Crea un nuevo paciente y lo retorna."""
         fecha_nacimiento = parse_fecha(fecha_nacimiento)
-        nuevo_paciente = cls(nombre=nombre, apellido=apellido, fecha_nacimiento=fecha_nacimiento, email=email, telefono=telefono)
+        nuevo_paciente = cls(
+            rut=rut, nombre=nombre, apellido=apellido, fecha_nacimiento=fecha_nacimiento, email=email, telefono=telefono
+        )
         db.session.add(nuevo_paciente)
         db.session.commit()
         return nuevo_paciente
 
     def __repr__(self):
-        return (f'<Paciente(id_paciente={self.id_paciente}, nombre={self.nombre}, '
-                f'apellido={self.apellido}, fecha_nacimiento={self.fecha_nacimiento}, '
+        return (f'<Paciente(rut={self.rut}, id_paciente={self.id_paciente}, '
+                f'nombre={self.nombre}, apellido={self.apellido}, '
+                f'fecha_nacimiento={self.fecha_nacimiento}, '
                 f'email={self.email}, telefono={self.telefono})>')
 
 # Tabla Medico
@@ -95,6 +106,7 @@ class Medico(db.Model):
 
     @classmethod
     def get_medico_por_especialidad(cls, especialidad):
+        '''Retorna los medicos de una especialidad'''
         if isinstance(especialidad, str):
             try:
                 especialidad = Especialidad[especialidad.upper()]
@@ -108,6 +120,7 @@ class Medico(db.Model):
 
     @classmethod
     def is_disponible_en_fecha(cls, fecha, id_medico):
+        '''Retorna True si el medico tiene bloques disponibles en la fecha'''
         bloques_disponibles = Horario.get_bloques_disp_en_fecha_de_medico(fecha, id_medico)
         return len(bloques_disponibles) > 0
 
@@ -171,6 +184,7 @@ class Horario(db.Model):
 
     @classmethod
     def get_bloques_disp_en_fecha_de_medico(cls, fecha, id_medico):
+        '''Retorna los bloques disponibles en una fecha para el medico'''
         bloques_ocupados = cls.get_bloques_ocup_en_fecha_de_medico(fecha, id_medico)
         bloques_ocupados = [bloque.bloque for bloque in bloques_ocupados]
         bloques_disponibles = [bloque for bloque in BloqueHorario if bloque not in bloques_ocupados]
@@ -198,7 +212,7 @@ class Horario(db.Model):
 # Tabla Cita
 class Cita(db.Model):
     id_cita: so.Mapped[int] = so.mapped_column(primary_key=True)
-    id_paciente: so.Mapped[int] = so.mapped_column(sa.ForeignKey('paciente.id_paciente'), nullable=False)
+    rut_paciente: so.Mapped[str] = so.mapped_column(sa.ForeignKey('paciente.rut'), nullable=False)
     id_medico: so.Mapped[int] = so.mapped_column(sa.ForeignKey('medico.id_medico'), nullable=False)
     id_horario: so.Mapped[int] = so.mapped_column(sa.ForeignKey('horario.id_horario'), nullable=False)
 
@@ -229,7 +243,10 @@ class Cita(db.Model):
 
     @classmethod
     def crear_cita(cls, id_paciente, id_medico, id_horario):
-        nueva_cita = cls(id_paciente=id_paciente, id_medico=id_medico, id_horario=id_horario)
+        '''Crea una nueva cita y la retorna'''
+        paciente = Paciente.get_paciente_by_id(id_paciente)
+        rut_paciente = paciente.rut
+        nueva_cita = cls(rut_paciente=rut_paciente, id_medico=id_medico, id_horario=id_horario)
         db.session.add(nueva_cita)
         db.session.commit()
         return nueva_cita
