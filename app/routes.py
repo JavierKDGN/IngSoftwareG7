@@ -3,7 +3,7 @@ import time
 from flask import render_template, redirect, url_for, request, jsonify, session
 from app import app
 from app.models import *
-from app.services.servicio_citas import reservar_cita_medica
+from app.services.servicio_citas import reservar_cita_medica, cancelar_cita_medica
 from app.utils import bloque_a_rango_horario, parse_nombre, parse_rut
 
 
@@ -40,22 +40,33 @@ def acceso_historial_citas():
             return render_template('acceso_historial_citas.html',error="Paciente no encontrado")
     return render_template('acceso_historial_citas.html')
 
-@app.route('/historial_citas')
+@app.route('/historial_citas', methods=['GET', 'POST'])
 def historial_citas():
-    print(Horario.query.all())
-    print(Cita.query.all())
+
+    # print(Horario.query.all())
+    # print(Cita.query.all())
+
     paciente_id = request.args.get('paciente_id', type=int)
     if not paciente_id:
         return redirect(url_for('index'))
 
-    historial = Cita.get_citas_por_paciente(paciente_id)  # Suponiendo que 1 es el ID del paciente
-    for cita in historial:
-        print(f"- Cita ID: {cita.id_cita}")
-        print(f"  Estado: {cita.estado.name}")
-        print(f"  Médico: {cita.medico.nombre} {cita.medico.apellido} - {cita.medico.especialidad}")
-        print(f"  Fecha: {cita.horario.fecha}")
-        print(f"  Bloque Horario: {cita.horario.bloque.name}")
-        print("-" * 30)
+
+    if request.method == 'POST':
+        cita_a_cancelar = request.form.get('id_cita', type=int)
+        if cita_a_cancelar:
+            print("Cancelando")
+            cancelar_cita_medica(cita_a_cancelar)
+            return redirect(url_for('historial_citas', paciente_id=paciente_id))
+
+    historial = Cita.get_citas_por_paciente(paciente_id)
+
+    # for cita in historial:
+    #     print(f"- Cita ID: {cita.id_cita}")
+    #     print(f"  Estado: {cita.estado.name}")
+    #     print(f"  Médico: {cita.medico.nombre} {cita.medico.apellido} - {cita.medico.especialidad}")
+    #     print(f"  Fecha: {cita.horario.fecha}")
+    #     print(f"  Bloque Horario: {cita.horario.bloque.name}")
+    #     print("-" * 30)
 
     return render_template('historial_citas.html', citas=historial)
 
@@ -191,3 +202,4 @@ def cita_confirmada():
 def cita_rechazada():
     """Muestra un mensaje de error si no se pudo reservar la cita."""
     return "No se pudo reservar la cita, por favor intente nuevamente"
+

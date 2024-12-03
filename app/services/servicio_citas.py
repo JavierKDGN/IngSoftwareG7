@@ -36,6 +36,7 @@ def reservar_cita_medica(id_paciente,id_medico,fecha,bloque):
 
 def cancelar_cita_medica(id_cita):
     cita_cancelada = Cita.cancelar_cita(id_cita)
+    print(cita_cancelada)
     if cita_cancelada:
         print(f"Cita {id_cita} cancelada correctamente")
         return cita_cancelada

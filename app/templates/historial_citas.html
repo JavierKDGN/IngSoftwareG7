@@ -24,6 +24,7 @@
                         <th scope="col">Especialista</th>
                         <th scope="col">Especialidad</th>
                         <th scope="col">Estado</th>
+                        <th scope="col">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -34,6 +35,16 @@
                         <td>{{ cita.medico.nombre }} {{ cita.medico.apellido }}</td>
                         <td>{{ cita.medico.especialidad.name }}</td>
                         <td>{{ cita.estado.name }}</td>
+                        <td>
+                            {% if cita.estado.name == 'AGENDADA' %}
+                            <form method="POST" action="{{ url_for('historial_citas', paciente_id=request.args.get('paciente_id')) }}" onsubmit="return confirmCancel()">
+                                <input type="hidden" name="id_cita" value="{{ cita.id_cita }}">
+                                <button type="submit" class="btn btn-danger btn-sm">Cancelar</button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted">No disponible</span>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -43,5 +54,10 @@
             {% endif %}
         </div>
     </div>
+    <script>
+    function confirmCancel() {
+        return confirm("¿Estás seguro de que deseas cancelar esta cita?");
+    }
+</script>
 </div>
 {% endblock %}
