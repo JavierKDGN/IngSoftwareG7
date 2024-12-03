@@ -68,10 +68,10 @@
                     <tbody>
                         {% for especialista in especialistas %}
                         <tr>
-                            <td>{{ especialista.id }}</td>
+                            <td>{{ especialista.id_medico }}</td>
                             <td>{{ especialista.nombre }}</td>
-                            <td>{{ especialista.especialidad }}</td>
-                            <td>{{ especialista.contacto }}</td>
+                            <td>{{ especialista.especialidad.name }}</td>
+                            <td>{{ especialista.telefono }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

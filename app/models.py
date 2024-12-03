@@ -35,6 +35,7 @@ class BloqueHorario(Enum):
     BLOQUE_17 = 17  # 17:00 - 17:30
     BLOQUE_18 = 18  # 17:30 - 18:00
 
+
 class Especialidad(Enum):
     CARDIOLOGIA = "Cardiología"
     PEDIATRIA = "Pediatría"
@@ -48,6 +49,7 @@ class Especialidad(Enum):
 # Tabla Paciente
 class Paciente(db.Model):
     id_paciente: so.Mapped[int] = so.mapped_column(primary_key=True)
+    rut: so.Mapped[str] = so.mapped_column(sa.String(12), unique=True, nullable=False)
 
     nombre: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     apellido: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
@@ -58,6 +60,10 @@ class Paciente(db.Model):
     @classmethod
     def get_paciente(cls, id_paciente):
         return cls.query.get(id_paciente)
+
+    @classmethod
+    def get_paciente_by_rut(cls, rut):
+        return cls.query.filter_by(rut=rut).first()
 
     @classmethod
     def get_all_pacientes(cls):
@@ -72,7 +78,7 @@ class Paciente(db.Model):
         return nuevo_paciente
 
     def __repr__(self):
-        return (f'<Paciente(id_paciente={self.id_paciente}, nombre={self.nombre}, '
+        return (f'<Paciente(id_paciente={self.id_paciente}, rut={self.rut},nombre={self.nombre}, '
                 f'apellido={self.apellido}, fecha_nacimiento={self.fecha_nacimiento}, '
                 f'email={self.email}, telefono={self.telefono})>')
 
@@ -84,7 +90,6 @@ class Medico(db.Model):
     apellido: so.Mapped[str] = so.mapped_column(sa.String(64), nullable=False)
     especialidad: so.Mapped[Especialidad] = so.mapped_column(sa.Enum(Especialidad), nullable=False)
     telefono: so.Mapped[Optional[str]] = so.mapped_column(sa.String(15))
-
     @classmethod
     def get_medico(cls, id_medico):
         return cls.query.get(id_medico)
@@ -123,6 +128,10 @@ class Medico(db.Model):
 
     @classmethod
     def crear_medico(cls, nombre, apellido, especialidad, telefono):
+        try:
+            especialidad = Especialidad[especialidad.upper()]
+        except KeyError:
+            raise ValueError(f"La especialidad '{especialidad}' no es válida. Opciones: {[e.name for e in Especialidad]}")
         nuevo_medico = cls(nombre=nombre, apellido=apellido, especialidad=especialidad, telefono=telefono)
         db.session.add(nuevo_medico)
         db.session.commit()
